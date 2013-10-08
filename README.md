@@ -24,9 +24,12 @@ The SageConnect server must:
 ## How To Install
 
 (mostly copied from the PlexConnect Page)
-# Follow this (add link) guide to create and add a custom certificate to all of your Apple TVs
-# Download and install SageConnect
-# 
+
+1. Follow this (add link) guide to create and add a custom certificate to all of your Apple TVs
+
+2. Download and install SageConnect
+
+3. do more stuff
 
 
 ```sh
@@ -98,6 +101,7 @@ So within some limits, you can do with the code whatever you want. However, if y
 The software is provided as is. It might work as expected - or not. Just don't blame us.
 
 
+[PlexConnect]: https://github.com/iBaa/PlexConnect
 [ATVBrowser]: https://github.com/finkdiff/ATVBrowser-script/tree/atvxml
 [Plex Forum thread]: http://forums.plexapp.com/index.php/topic/57831-plex-atv-think-different
 [ZIP]: https://github.com/iBaa/PlexConnect/archive/master.zip
