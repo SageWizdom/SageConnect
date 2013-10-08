@@ -96,7 +96,7 @@ Holds a couple of utility functions for text translation purposes. Uses dictiona
 ## License and Disclaimer
 (Again, mostly copied from the [PlexConnect][] page)
 This software is open-sourced under the MIT Licence (see ```license.txt``` for the full license).
-So within some limits, you can do with the code whatever you want. However, if you like and/or want to re-use it, donate to the [PlexConnect][] guys.
+So within some limits, you can do with the code whatever you want. However, if you like and/or want to re-use it, donate to the [PlexConnect][] [Donation][]guys.
 
 The software is provided as is. It might work as expected - or not. Just don't blame us.
 
@@ -104,7 +104,7 @@ The software is provided as is. It might work as expected - or not. Just don't b
 [PlexConnect]: https://github.com/iBaa/PlexConnect
 [ATVBrowser]: https://github.com/finkdiff/ATVBrowser-script/tree/atvxml
 [Plex Forum thread]: http://forums.plexapp.com/index.php/topic/57831-plex-atv-think-different
-[ZIP]: https://github.com/iBaa/PlexConnect/archive/master.zip
+[ZIP]: https://github.com/SageWizdom/SageConnect/archive/master.zip
 [Wiki]: https://github.com/iBaa/PlexConnect/wiki
 [Wiki - Install guides]: https://github.com/iBaa/PlexConnect/wiki/Install-guides
 [Wiki - Advanced Settings]: https://github.com/iBaa/PlexConnect/wiki/Settings-for-advanced-use-and-troubleshooting
