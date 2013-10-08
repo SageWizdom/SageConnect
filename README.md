@@ -1,29 +1,34 @@
-# PlexConnect
-or: "Plex @ aTV - think different..."
+# SageConnect
 
-We all want the pleasure of Plex on the big screen - in this case driven by an AppleTV.
-Unfortunately there are officially no Apps allowed on AppleTV, most of the time a jailbreak is late (iOS 5.2?) or not available at all (aTV3).
+SageConnect is a SageTV fork of [PlexConnect][].  Right off the bat, major credit and thanks to iBaa, roidy, and elan and all the rest, for their crazy good work on PlexConnect.  Also, many thanks to Nielm and the SageTV developers of..... (update with appropriate credit)
 
-This is a collection of files developed for the little project described in this [Plex Forum thread][].
-See also the discontinued [ATVBrowser][] for a project with similar purpose, all javascript.
+This code is a fork of [PlexConnect][] modified to work with SageTV.  It is currently VERY alpha. Let me repeat, VERY ALPHA.  It works, it streams video and imported media to any AppleTv, but right now it is totally a hack.  That said, please play with this, fix, help, etc.
 
-For more information, like detailed Installation Guides, FAQs and similar, visit the [Wiki][].
+For more info on [PlexConnect][] their [Wiki][] or just more details on how things work, head over to the original site.
 
 
-## How does it work?
-The basic idea is, to...
-- re-use an already available app (like YouTube, Vimeo, ... in this case: Apple Trailers)
-- re-route the request to your local Plex Media Server
-- re-work the reply to fit into AppleTV's XML communication scheme
-- let iOS do the rest
+## Pre-Requisites
+
+For this version, you need a SageTV server and a second "SageConnect" server.  The SageConnect server does almost no processing, so it shouldn't need to be high power.  The current iteration expects certain SageTV plug-ins and settings.  The test SageTV server is running:
+* SageTV Web Interface plugin
+* SageTV Mobile Web Interface plugin
+* Nielm's Sage XML Info plugin
+
+The SageConnect server must:
+* Any OS (Ubuntu 13.04)
+* Python 2.7.4 (installed by default in Ubuntu 13.04
+* Network accessable from your AppleTVs
+* Network access to your SageTV server
 
 
-## Requirements
-- Python 2.6.x with minor issues: ElementTree doesn't support tag indices.
-- Python 2.7.x recommended.
+## How To Install
+
+(mostly copied from the PlexConnect Page)
+# Follow this (add link) guide to create and add a custom certificate to all of your Apple TVs
+# Download and install SageConnect
+# 
 
 
-## Installation
 ```sh
 # Installation
 git clone https://github.com/iBaa/PlexConnect.git
@@ -41,9 +46,10 @@ See the [Wiki - Install guides][] for additional documentation.
 
 
 ## Usage
+
 ```sh
-# Run with root privileges
-sudo ./PlexConnect.py
+# Run with root privileges and keep running if logged out
+sudo nohup ./PlexConnect.py
 ```
 > Depending on your OS, you might only need ```PlexConnect.py```. Or ```python PlexConnect.py``` or ...
 
@@ -53,7 +59,16 @@ sudo ./PlexConnect.py
 See the [Wiki - Advanced Settings][] for more details on configuration and advanced settings.
 
 
+## ToDo
+
+* Learn and reuse the original PlexConnect Template mechanism (currently manually generating all menus)
+* Clean up all code (I've horribly uglied up the current PlexConnect release)
+* Make this able to run on the same box as the SageTV server (currently on a standalone)
+* Make this much much better looking (see item 1, hack)
+
+
 ## More detailed Information about the files
+
 * __PlexConnect.py__ - 
 Main script file, invoking the DNSServer and WebServer into seperate processes.
 * __PlexAPI.py__ - 
@@ -73,9 +88,12 @@ Handles the aTV settings like ViewModes or Transcoder options. Stores aTV settin
 Holds a couple of utility functions for text translation purposes. Uses dictionaries from ```assets/locales/```.
 
 
+
+
 ## License and Disclaimer
+(Again, mostly copied from the [PlexConnect][] page)
 This software is open-sourced under the MIT Licence (see ```license.txt``` for the full license).
-So within some limits, you can do with the code whatever you want. However, if you like and/or want to re-use it, we really appreciate a [Donation][].
+So within some limits, you can do with the code whatever you want. However, if you like and/or want to re-use it, donate to the [PlexConnect][] guys.
 
 The software is provided as is. It might work as expected - or not. Just don't blame us.
 
