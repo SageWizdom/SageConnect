@@ -39,7 +39,8 @@ import PlexAPI
 from Debug import *  # dprint(), prettyXML()
 import Localize
 
-
+# import sagetv helper code: SageXML.py
+import SageXML
 
 g_param = {}
 def setParams(param):
@@ -99,28 +100,36 @@ def XML_PlayVideo_ChannelsV1(path):
 def discoverPMS():
     global g_param
     if g_param['CSettings'].getSetting('enable_plexgdm')=='False':
+
+        if g_param['CSettings'].getSetting('ip_sagetv')=='':
+            dprint(__name__, 0, "Settings.cfg: ip_sagetv value not set")
+
+        if g_param['CSettings'].getSetting('port_sagetv')=='':
+            dprint(__name__, 0, "Settings.cfg: port_sagetv value not set")
+
         PMS_uuid = 'PMS_from_Settings'
         PMS_list = { PMS_uuid:
                 {
                     'uuid'      : PMS_uuid,
                     'serverName': PMS_uuid,
-                    'ip'        : g_param['CSettings'].getSetting('ip_pms'),
-                    'port'      : g_param['CSettings'].getSetting('port_pms'),
+                    'ip'        : g_param['CSettings'].getSetting('ip_sagetv'),
+                    'port'      : g_param['CSettings'].getSetting('port_sagetv'),
                 }
             }
         opts = (PMS_uuid, )
-        dprint(__name__, 0, "PlexGDM off - PMS from settings: {0}:{1}", PMS_list[PMS_uuid]['ip'], PMS_list[PMS_uuid]['port'])
+        dprint(__name__, 0, "SageTV support hard coded" )
+        dprint(__name__, 0, "PlexGDM off - PMS from settings: {0}:{1}", PMS_list[PMS_uuid]['i$
     
-    else:
-        PMS_list = PlexAPI.PlexGDM()
-        opts = ()
-        for PMS_uuid in PMS_list.keys():
-            opts = opts + (PMS_uuid, )
-            dprint(__name__, 0, "PlexGDM - PMS: {0}:{1}", PMS_list[PMS_uuid]['ip'], PMS_list[PMS_uuid]['port'])
-        
-        if len(PMS_list)==0:
-            opts = ('no_PMS_found', )
-            dprint(__name__, 0, "PlexGDM - no PMS found")
+#    else:
+#        PMS_list = PlexAPI.PlexGDM()
+#        opts = ()
+#        for PMS_uuid in PMS_list.keys():
+#            opts = opts + (PMS_uuid, )
+#            dprint(__name__, 0, "PlexGDM - PMS: {0}:{1}", PMS_list[PMS_uuid]['ip'], PMS_list[PMS_uuid]['port'])
+#        
+#        if len(PMS_list)==0:
+#            opts = ('no_PMS_found', )
+#            dprint(__name__, 0, "PlexGDM - no PMS found")
     
     g_ATVSettings.setOptions('pms_uuid', opts)
     g_param['PMS_list'] = PMS_list
@@ -137,6 +146,74 @@ def discoverPMS():
 """
 def XML_PMS2aTV(address, path, options):
 
+# OnScreen tree ends up as
+#    Top menu
+#        Recorded Shows (title List)
+#            Titles (List all episodes in that title)
+#                Episode / Airing ID INFO
+#                    Make "play" xml using Media ID
+#        Media directories
+#            Sub dirs
+#                Media files
+#                    make play XML using SageDBID
+
+#
+# I cheated, to "remove" spaces in URLs, I made them *
+# so replace all '*' with ' '
+# There is probably a "correct" way to do this.. I'll have to look into this.
+#
+    dprint(__name__, 1, "--path-----> {0}", path)
+    path = path.replace('*',' ')
+    path = path.replace('&apos;','\'')
+    # for now, we are ignoring the address passed
+    #    print "--address--> " + address
+    dprint(__name__, 1, "--path-----> {0}", path)
+
+    # Make top menu
+    if path.find("SageConnect") > 0:
+        aTVroot = SageXML.makeTopMenu()
+        return etree.tostring(aTVroot)
+
+    #========== Handle / Manage recorded shows ===========
+    # Make and return a list of all recorded shows
+    elif path.find("recordedShows") > 0:
+        aTVroot = SageXML.makeRecordedShowList()
+#        aTVroot = makeTitleGrid()
+        return etree.tostring(aTVroot)
+
+    # if given a show title, make a list of all episodes
+    elif path.find("title") > 0:
+        aTVroot = SageXML.makeShowList(path)
+       return etree.tostring(aTVroot)
+
+    # if given a media id, get media info and display on screen
+    elif path.find("MediaId") > 0:
+        aTVroot = SageXML.makeMediaInfo(path)
+        return etree.tostring(aTVroot)
+
+    # when play is clicked, return the XML with media info
+    elif path.find("MediaFileId") > 0:
+        aTVroot = SageXML.makePlay(path)
+        etree.dump(aTVroot)
+        return etree.tostring(aTVroot)
+
+    #========== Handle / Manage media library ===========
+
+    # if MediaLibrary.... make show list
+    # parse and return the media path
+    # if this is a media file, return the XML similar to MediaID above
+    # when play is clicked, MediaFileID (above) is called
+    # parse the path to get what to generate
+    elif path.find("mediaPath") > 0:
+        aTVroot = SageXML.makeDirList(path[path.find('=')+1:])
+        return etree.tostring(aTVroot)
+
+    # Generate an error
+    return XML_Error('SageTV Connect', 'Unable to handle request, please try again.')
+
+
+
+def FakeFunction():
     cmd = ''
     if 'PlexConnect' in options:
         cmd = options['PlexConnect']
