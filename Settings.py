@@ -17,9 +17,14 @@ HTTP: port_webserver - override when using webserver + forwarding to PlexConnect
 HTTPS: port_ssl, certfile, enable_webserver_ssl - configure SSL portion or webserver
 """
 g_settings = { \
-    'enable_plexgdm'  :('True', 'False'), \
+    'enable_plexgdm'  :('False', 'True'), \
     'ip_pms'          :('192.168.178.10',), \
     'port_pms'        :('32400',), \
+    \
+    'ip_sagetv'       :('192.168.1.12',),\
+    'port_sagetv'     :('80',),\
+    'sagetv_user'     :('sage',),\
+    'sagetv_pass'     :('frey',),\
     \
     'enable_dnsserver':('True', 'False'), \
     'port_dnsserver'  :('53',), \
@@ -29,6 +34,7 @@ g_settings = { \
     'enable_plexconnect_autodetect':('True', 'False'), \
     'ip_plexconnect'  :('0.0.0.0',), \
     \
+    'ip_webserver'    :('192.168.1.12',),\
     'port_webserver'  :('80',), \
     'enable_webserver_ssl'         :('True', 'False'), \
     'port_ssl'        :('443',), \
