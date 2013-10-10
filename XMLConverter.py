@@ -118,8 +118,8 @@ def discoverPMS():
             }
         opts = (PMS_uuid, )
         dprint(__name__, 0, "SageTV support hard coded" )
-        dprint(__name__, 0, "PlexGDM off - PMS from settings: {0}:{1}", PMS_list[PMS_uuid]['i$
-    
+        dprint(__name__, 0, "PlexGDM off - PMS from settings: {0}:{1}", PMS_list[PMS_uuid]['ip'], PMS_list[PMS_uuid]['port'])
+                                                                                           
 #    else:
 #        PMS_list = PlexAPI.PlexGDM()
 #        opts = ()
@@ -184,7 +184,7 @@ def XML_PMS2aTV(address, path, options):
     # if given a show title, make a list of all episodes
     elif path.find("title") > 0:
         aTVroot = SageXML.makeShowList(path)
-       return etree.tostring(aTVroot)
+        return etree.tostring(aTVroot)
 
     # if given a media id, get media info and display on screen
     elif path.find("MediaId") > 0:
@@ -374,7 +374,7 @@ def FakeFunction():
     # we need PMS but don't see selected one: re-discover (PlexGDM)
     if not path=='' and not PMS_uuid in PMS_list:
         if not discoverPMS():
-            return XML_Error('PlexConnect', 'No Plex Media Server in Proximity')
+            return XML_Error('SageTV Connect', 'No SageTV Media Server detected')
         PMS_list = g_param['PMS_list']
         g_ATVSettings.checkSetting(options['PlexConnectUDID'], 'pms_uuid')  # verify PMS_uuid
         PMS_uuid = g_ATVSettings.getSetting(options['PlexConnectUDID'], 'pms_uuid')
@@ -389,7 +389,7 @@ def FakeFunction():
     if not path=='':
         PMS = PlexAPI.getXMLFromPMS(g_param['Addr_PMS'], path)
         if PMS==False:
-            return XML_Error('PlexConnect', 'No Response from Plex Media Server')
+            return XML_Error('SageTV Connect', 'No Response from SageTV Media Server')
         
         PMSroot = PMS.getroot()
         

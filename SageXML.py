@@ -49,7 +49,7 @@ from urlparse import urlparse
 from urllib import quote_plus
 
 import Settings, ATVSettings
-import PlexGDM
+import PlexAPI
 from Debug import *  # dprint()
 import Localize
 

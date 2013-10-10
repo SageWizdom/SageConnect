@@ -351,7 +351,8 @@ atv.onAppEntry = function()
     firmVer = fv[0] + "." + fv[1];
     if (parseFloat(firmVer) >= 5.1)
     {
-        atv.loadURL("http://atv.plexconnect/PlexConnect.xml");
+        atv.loadURL("http://atv.plexconnect/SageConnect.xml");
+/*        atv.loadURL("http://atv.plexconnect/PlexConnect.xml");*/
     }
     else
     {

@@ -235,7 +235,10 @@ def Run_SSL(cmdPipe, param):
     try:
         certfile = open(cfg_certfile, 'r')
     except:
+        dprint(__name__, 0, "**************************************")
         dprint(__name__, 0, "Failed to access certificate: {0}", cfg_certfile)
+        dprint(__name__, 0, "You must create and install valid certificates - see readme")
+        dprint(__name__, 0, "**************************************")
         sys.exit(1)
     certfile.close()
     
