@@ -25,16 +25,12 @@ The SageConnect server must:
 
 (mostly copied from the [Wiki - Install guides][])
 
-1. Follow this [SSL+ATV][] guide to create and add a custom certificate to all of your Apple TVs
+1. Follow this [SSL+ATV][] guide to create and add the custom HTTPS/SSL certificate to all of your Apple TVs
 
-2. Download and install SageConnect via Git or a [ZIP][]
+2. Set your AppleTV to use your new servers IP as its DNS server (all else can stay the same)
+-- Note, you want to use a static IP for your DNS server
 
-3. Extract into any directory
-
-4. Run the code "sudo nohup ./PlexConnect"
-* note: this will at some point be renamed, etc. Right now this is alpha to get folks running
-
-
+3. Download and install SageConnect via Git or as a [ZIP][] file
 ```sh
 # Installation
 git clone https://github.com/iBaa/PlexConnect.git
@@ -42,11 +38,19 @@ git clone https://github.com/iBaa/PlexConnect.git
 cd PlexConnect
 git pull
 ```
-> If you don't have Git, you can download [ZIP][] file and extract files to a local directory.
 
-- create HTTPS/SSL certificate
-- install certificate to ```assets/certificate/```
-- install certificate on aTV
+4. Extract into any directory
+
+5. Copy the certificate to the ```assets/certificate/``` directory
+
+6. Run the code once and kill it (ctrl-c) to generate a config file (Settings.cfg)
+
+7. Configure everything see [Configuring SageConnect][] below
+
+8. Run the code "sudo nohup ./PlexConnect" so that it runs, and continues to run even after you log out.
+
+-- Note: The code will at some point be renamed. Right now this is alpha to get folks running.
+
 
 See the PlexConnect [Wiki - Install guides][] for additional documentation.
 
@@ -67,8 +71,9 @@ ctrl-c will stop the app when running (or sudo killall python)
 See the [Wiki - Advanced Settings][] for more details on configuration and advanced settings.
 
 
-## Getting Started
+## Configuring SageConnect
 Run Plex connect once, then kill it.  This will create a settings file.  You need to configure these settings
+```sh
 port_webserver = 80
 port_sagetv = 80
 port_ssl = 443
@@ -85,6 +90,7 @@ enable_plexconnect_autodetect = False (must be disabled for now)
 certfile = ./assets/certificates/trailers.pem (this should be the name of your cert file)
 
 prevent_atv_update = True (prevent appletv from auto updating)
+```
 
 ## ToDo
 
@@ -120,9 +126,9 @@ Holds a couple of utility functions for text translation purposes. Uses dictiona
 ## License and Disclaimer
 (Again, mostly copied from the [PlexConnect][] page)
 This software is open-sourced under the MIT Licence (see ```license.txt``` for the full license).
-So within some limits, you can do with the code whatever you want. However, if you like and/or want to re-use it, donate to the [PlexConnect][] [Donation][]guys.
+So within some limits, you can do with the code whatever you want. However, if you like and/or want to re-use it, consider a [Donation][] to the [PlexConnect][] guys.
 
-The software is provided as is. It might work as expected - or not. Just don't blame us.
+The software is provided as is. It might work as expected - or not. Just don't blame us (or them!).
 
 
 [SSL+ATV]: http://langui.sh/2013/08/27/appletv-ssl-plexconnect/
