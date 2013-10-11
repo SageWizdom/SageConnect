@@ -56,11 +56,32 @@ sudo nohup ./PlexConnect.py
 ```
 > Depending on your OS, you might only need ```PlexConnect.py```. Or ```python PlexConnect.py``` or ...
 
+ctrl-c will stop the app when running (or sudo killall python)
+
 - set your AppleTV's DNS address to the computer running PlexConnect
 - run the Trailer App
 
 See the [Wiki - Advanced Settings][] for more details on configuration and advanced settings.
 
+
+## Getting Started
+Run Plex connect once, then kill it.  This will create a settings file.  You need to configure these settings
+port_webserver = 80
+port_sagetv = 80
+port_ssl = 443
+ip_plexconnect = (ip of host running this code)
+ip_dnsmaster = (your DNS or ex. google 8.8.8.8)
+ip_sagetv = (ip of your SageTV server)
+ip_webserver = (ip of host running this code)
+
+sagetv_user = sage (or your sagetv username)
+sagetv_pass = frey (or your sagetv password)
+
+enable_plexconnect_autodetect = False (must be disabled for now)
+
+certfile = ./assets/certificates/trailers.pem (this should be the name of your cert file)
+
+prevent_atv_update = True (prevent appletv from auto updating)
 
 ## ToDo
 
