@@ -147,7 +147,7 @@ class MyHandler(BaseHTTPRequestHandler):
                 
                 # get everything else from XMLConverter - formerly limited to trailing "/" and &PlexConnect Cmds
                 if True:
-                    dprint(__name__, 1, "serving .xml: "+ self.path)
+                    dprint(__name__, 1, "serving .xml: " + self.path + " : " + args )
                     XML = XMLConverter.XML_PMS2aTV(self.client_address, self.path + args, options)
                     self.send_response(200)
                     self.send_header('Content-type', 'text/xml')
@@ -235,10 +235,7 @@ def Run_SSL(cmdPipe, param):
     try:
         certfile = open(cfg_certfile, 'r')
     except:
-        dprint(__name__, 0, "**************************************")
         dprint(__name__, 0, "Failed to access certificate: {0}", cfg_certfile)
-        dprint(__name__, 0, "You must create and install valid certificates - see readme")
-        dprint(__name__, 0, "**************************************")
         sys.exit(1)
     certfile.close()
     
