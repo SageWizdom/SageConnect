@@ -147,7 +147,7 @@ class MyHandler(BaseHTTPRequestHandler):
                 
                 # get everything else from XMLConverter - formerly limited to trailing "/" and &PlexConnect Cmds
                 if True:
-                    dprint(__name__, 1, "serving .xml: "+self.path)
+                    dprint(__name__, 1, "serving .xml: "+ self.path)
                     XML = XMLConverter.XML_PMS2aTV(self.client_address, self.path + args, options)
                     self.send_response(200)
                     self.send_header('Content-type', 'text/xml')
