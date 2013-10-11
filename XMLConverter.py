@@ -194,7 +194,6 @@ def XML_PMS2aTV(address, path, options):
     # when play is clicked, return the XML with media info
     elif path.find("MediaFileId") > 0:
         aTVroot = SageXML.makePlay(path)
-        etree.dump(aTVroot)
         return etree.tostring(aTVroot)
 
     #========== Handle / Manage media library ===========
