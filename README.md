@@ -33,7 +33,7 @@ The SageConnect server must:
 3. Download and install SageConnect via Git or as a [ZIP][] file
 ```sh
 # Installation
-git clone https://github.com/iBaa/PlexConnect.git
+git clone https://github.com/SageWizdom/SageConnect.git
 # Updating
 cd PlexConnect
 git pull
