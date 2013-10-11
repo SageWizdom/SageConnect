@@ -37,7 +37,6 @@ import re
 import codecs
 
 
-
 try:
     import xml.etree.cElementTree as etree
 except ImportError:
@@ -49,10 +48,9 @@ from urlparse import urlparse
 from urllib import quote_plus
 
 import Settings, ATVSettings
-import PlexAPI
+#import PlexAPI
 from Debug import *  # dprint()
 import Localize
-
 
 
 g_param = {}
@@ -65,12 +63,8 @@ def setATVSettings(cfg):
     global g_ATVSettings
     g_ATVSettings = cfg
 
-
-
 # links to CMD class for module wide usage
 g_CommandCollection = None
-
-
 
 """
 # XML in-place prettyprint formatter
@@ -120,25 +114,6 @@ def XML_Error(title, desc):
 
 
 
-def XML_PlayVideo_ChannelsV1(path):
-    XML = '\
-<atv>\n\
-  <body>\n\
-    <videoPlayer id="com.sample.video-player">\n\
-      <httpFileVideoAsset id="' + path + '">\n\
-        <mediaURL>http://' + g_param['Addr_PMS'] +  path + '</mediaURL>\n\
-        <title>*title*</title>\n\
-        <!--bookmarkTime>{{EVAL(Video/viewOffset:0:int(x/1000))}}</bookmarkTime-->\n\
-      </httpFileVideoAsset>\n\
-    </videoPlayer>\n\
-  </body>\n\
-</atv>\n\
-';
-    dprint(__name__,2 , XML)
-    return XML
-
-
-
 """
 # GetURL
 # Source (somewhat): https://github.com/hippojay/plugin.video.plexbmc
@@ -149,11 +124,11 @@ def GetURL(address, path):
         conn = httplib.HTTPConnection(address, timeout=10)
 
 
-        if g_param['CSettings'].getSetting('sagetv_user')<>'':
-            username = g_param['CSettings'].getSetting('sagetv_user')
+        if param['CSettings'].getSetting('sagetv_user')<>'':
+            username = param['CSettings'].getSetting('sagetv_user')
 
-        if g_param['CSettings'].getSetting('sagetv_pass')<>'':
-            password = g_param['CSettings'].getSetting('sagetv_pass')
+        if param['CSettings'].getSetting('sagetv_pass')<>'':
+            password = param['CSettings'].getSetting('sagetv_pass')
         
         # base64 encode the username and password
         auth = base64.encodestring('%s:%s' % (username, password)).replace('\n', '')
@@ -200,7 +175,7 @@ def GetURL(address, path):
 ## http://sagetv.server/sagem/m/recordings.jsp?title=How+Do+They+Do+It%3f
 """
 def XML_ReadFromURL(address, path):
-    dprint(__name__, 0, "XML_ReadFromURL {0}:{1}", address, path)
+    dprint(__name__, 1, "XML_ReadFromURL {0}:{1}", address, path)
 
     # send plex specific xargs that sage shouldn't need
     #    xargs = PlexAPI_getXArgs()
@@ -318,7 +293,8 @@ def getXML(textURL):
 
 '''
 def makeTopMenu():
-    print "====== makeTopMenu ======"
+    dprint(__name__, 1, "====== makeTopMenu ======" )
+    InitCfg()
 
     # Get the IP Address of the SageTV Server
     if g_param['CSettings'].getSetting('ip_sagetv')<>'':
@@ -407,8 +383,9 @@ Download the list of recorded shows
 Parse and turn it into an appropriate list
 '''
 def makeRecordedShowList():
-    print "====== makeRecordedShowList ======"
-
+    dprint(__name__, 1, "====== makeRecordedShowList ======" )
+    InitCfg()
+    
     # Get the IP of the SageTV Server
     if g_param['CSettings'].getSetting('ip_sagetv')<>'':
         sagetv_ip = g_param['CSettings'].getSetting('ip_sagetv')
@@ -616,7 +593,8 @@ def makeRecordedShowList():
 # it doesn't currently work
 #
 def makeTitleGrid():
-    dprint(__name__, 2, "====== makeTitleGrid ======" )
+    dprint(__name__, 1, "====== makeTitleGrid ======" )
+    InitCfg()
 
     # Get the IP of the SageTV Server
     if g_param['CSettings'].getSetting('ip_sagetv')<>'':
@@ -761,7 +739,8 @@ def makeTitleGrid():
 # for the selected show
 #
 def makeShowList(atvTitle):
-    dprint(__name__, 2, "====== makeShowList ======: {0}", atvTitle )
+    dprint(__name__, 1, "====== makeShowList ======: {0}", atvTitle )
+    InitCfg()
         
     # Get the IP of the SageTV Server
     if g_param['CSettings'].getSetting('ip_sagetv')<>'':
@@ -1013,7 +992,8 @@ def makeShowList(atvTitle):
 
 
 def makeMediaInfo(atvAiring):
-    dprint(__name__, 2, "====== makeMediaInfo ======: {0}", atvAiring )
+    dprint(__name__, 1, "====== makeMediaInfo ======: {0}", atvAiring )
+    InitCfg()
         
     # Get the IP of the SageTV Server
     if g_param['CSettings'].getSetting('ip_sagetv')<>'':
@@ -1210,7 +1190,8 @@ def makeMediaInfo(atvAiring):
     ATV_ID_BigPoster = etree.SubElement(ATVItemDetail, 'image')
     ATV_ID_BigPoster.set("style","moviePoster")
 
-    posterTmp = "http://" + username + ":" + password + "@" + sagetv_ip + textURL
+#    posterTmp = "http://" + username + ":" + password + "@" + sagetv_ip + textURL
+    posterTmp = "http://" + username + ":" + password + "@" + sagetv_ip
     ATV_ID_BigPoster.text = posterTmp + "/stream/MediaFileThumbnailServlet?MediaFileId=" + epMediaID
     ATV_ID_DefImage = etree.SubElement(ATVItemDetail, 'defaultImage')
     ATV_ID_DefImage.text = "resource://Poster.png"
@@ -1331,7 +1312,7 @@ def makeMediaInfo(atvAiring):
     #    </actionButton>
     ATV_ID_CS_S_S_SS_I_AB = etree.SubElement(ATV_ID_CS_S_S_SS_I, 'actionButton')
     ATV_ID_CS_S_S_SS_I_AB.set("id","play")
-    TempStr = "atv.sessionStorage['addrpms']='" + stv_cnct_ip + "';atv.loadURL('" + stv_cnct_ip + "/MediaFileId=" + epMediaID + "')"
+    TempStr = "atv.sessionStorage['addrpms']='" + stv_cnct_ip + "';atv.loadURL('http://" + stv_cnct_ip + "/MediaFileId=" + epMediaID + "')"
     ATV_ID_CS_S_S_SS_I_AB.set("onSelect",TempStr)
     ATV_ID_CS_S_S_SS_I_AB.set("onPlay",TempStr)
     ATV_ID_CS_S_S_SS_I_AB_Title = etree.SubElement(ATV_ID_CS_S_S_SS_I_AB, 'title')
@@ -1507,7 +1488,8 @@ def makeMediaInfo(atvAiring):
 
 
 def makePlay(atvAiring):
-    dprint(__name__, 2, "====== makePlay ======: {0}", atvAiring )
+    dprint(__name__, 1, "====== makePlay ======: {0}", atvAiring )
+    InitCfg()
     
     # Get the IP of the SageTV Server
     if g_param['CSettings'].getSetting('ip_sagetv')<>'':
@@ -1594,7 +1576,8 @@ def makeDirTree():
     # Specifically build imported media tree
     # this will look to see if we have saved a dir tree, if not, it will generate the xml and save it.
     # how often do I need to regenerate?  once a month ish?
-    dprint(__name__, 2, "====== makeDirTree ======" )
+    dprint(__name__, 1, "====== makeDirTree ======" )
+    InitCfg()
         
     # Get the IP of the SageTV Server
     if g_param['CSettings'].getSetting('ip_sagetv')<>'':
@@ -1705,7 +1688,8 @@ def makeDirTree():
 
 
 def findNode(xmlRoot, Path):
-    dprint(__name__, 2, "====== findNode ======: xmlRoot : {0}", Path)
+    dprint(__name__, 1, "====== findNode ======: xmlRoot : {0}", Path)
+    InitCfg()
         
     # Get the IP of the SageTV Server
     if g_param['CSettings'].getSetting('ip_sagetv')<>'':
@@ -1761,7 +1745,8 @@ def findNode(xmlRoot, Path):
 # Have it call back with the full path
 #
 def generatePathXML(path, myList):
-    dprint(__name__, 2, "====== generatePathXML ======: myList : {0}", path)
+    dprint(__name__, 1, "====== generatePathXML ======: myList : {0}", path)
+    InitCfg()
         
     # Get the IP of the SageTV Server
     if g_param['CSettings'].getSetting('ip_sagetv')<>'':
@@ -1905,7 +1890,8 @@ def generatePathXML(path, myList):
 
 
 def makeDirList(path):
-    dprint(__name__, 2, "====== makeDirList ======: {0}", path)
+    dprint(__name__, 1, "====== makeDirList ======: {0}", path)
+    InitCfg()
         
     # Get the IP of the SageTV Server
     if g_param['CSettings'].getSetting('ip_sagetv')<>'':
@@ -1972,702 +1958,39 @@ def makeDirList(path):
         # Make and return item Screen XML and
         ## LINK TO SHOW INFO http://sagetv.server/sage/DetailedInfo?MediaFileId=10490770
         
-        print "--id -------> " + myNode.get('id')
+        dprint(__name__, 2, "--id -------> {0}", myNode.get('id'))
         if myNode.get('sageDbId') is not None:
             dprint(__name__, 2, "--sageDbId -> {0}", myNode.get('sageDbId'))
             txtTmp = "/MediaId=" + myNode.get('sageDbId')
 
             return makeMediaInfo(txtTmp)
         else:
+            dprint(__name__, 0, "MakeDirList(): There is no MediaFileId for this path: {0}", path )
             return XML_Error("makeDirList", "Unable to make MediaInfo Screen. There is no MediaFileId entry")
 
 
     else:
         return generatePathXML(path, myList)
 
+    dprint(__name__, 0, "MakeDirList(): Failed to process path: {0}", path )
     return XML_Error("makeDirList", "Failed to process")
 
 
-# for each command {{cmd}} do what it says
-def XML_ExpandNode(elem, child, src, srcXML, text_tail):
-    if text_tail=='TEXT':  # read line from text or tail
-        line = child.text
-    elif text_tail=='TAIL':
-        line = child.tail
-    else:
-        dprint(__name__, 0, "XML_ExpandNode - text_tail badly specified: {0}", text_tail)
-        return False
-    
-    pos = 0
-    while line!=None:
-        cmd_start = line.find('{{',pos)
-        cmd_end   = line.find('}}',pos)
-        if cmd_start==-1 or cmd_end==-1 or cmd_start>cmd_end:
-            return False  # tree not touched, line unchanged
-        
-        dprint(__name__, 2, "XML_ExpandNode: {0}", line)
-        
-        cmd = line[cmd_start+2:cmd_end]
-        if cmd[-1]!=')':
-            dprint(__name__, 0, "XML_ExpandNode - closing bracket missing: {0} ", line)
-        
-        parts = cmd.split('(',1)
-        cmd = parts[0]
-        param = parts[1].strip(')')  # remove ending bracket
-        
-        res = False
-        if hasattr(CCommandCollection, 'TREE_'+cmd):  # expand tree, work COPY, CUT
-            line = line[:cmd_start] + line[cmd_end+2:]  # remove cmd from text and tail
-            if text_tail=='TEXT':  
-                child.text = line
-            elif text_tail=='TAIL':
-                child.tail = line
-            
-            try:
-                res = getattr(g_CommandCollection, 'TREE_'+cmd)(elem, child, src, srcXML, param)
-            except:
-                dprint(__name__, 0, "XML_ExpandNode - Error in cmd {0}, line {1}\n{2}", cmd, line, traceback.format_exc())
-            
-            if res==True:
-                return True  # tree modified, node added/removed: restart from 1st elem
-        
-        elif hasattr(CCommandCollection, 'ATTRIB_'+cmd):  # check other known cmds: VAL, EVAL...
-            dprint(__name__, 2, "XML_ExpandNode - Stumbled over {0} in line {1}", cmd, line)
-            pos = cmd_end
-        else:
-            dprint(__name__, 0, "XML_ExpandNode - Found unknown cmd {0} in line {1}", cmd, line)
-            line = line[:cmd_start] + "((UNKNOWN:"+cmd+"))" + line[cmd_end+2:]  # mark unknown cmd in text or tail
-            if text_tail=='TEXT':
-                child.text = line
-            elif text_tail=='TAIL':
-                child.tail = line
-    
-    dprint(__name__, 2, "XML_ExpandNode: {0} - done", line)
-    return False
 
-
-
-def XML_ExpandAllAttrib(elem, src, srcXML):
-    # unpack template commands in elem.text
-    line = elem.text
-    if line!=None:
-        elem.text = XML_ExpandLine(src, srcXML, line.strip())
-    
-    # unpack template commands in elem.tail
-    line = elem.tail
-    if line!=None:
-        elem.tail = XML_ExpandLine(src, srcXML, line.strip())
-    
-    # unpack template commands in elem.attrib.value
-    for attrib in elem.attrib:
-        line = elem.get(attrib)
-        elem.set(attrib, XML_ExpandLine(src, srcXML, line.strip()))
-    
-    # recurse into children
-    for el in elem:
-        XML_ExpandAllAttrib(el, src, srcXML)
-
-
-
-def XML_ExpandLine(src, srcXML, line):
-    pos = 0
-    while True:
-        cmd_start = line.find('{{',pos)
-        cmd_end   = line.find('}}',pos)
-        if cmd_start==-1 or cmd_end==-1 or cmd_start>cmd_end:
-            break;
-        
-        dprint(__name__, 2, "XML_ExpandLine: {0}", line)
-        
-        cmd = line[cmd_start+2:cmd_end]
-        if cmd[-1]!=')':
-            dprint(__name__, 0, "XML_ExpandLine - closing bracket missing: {0} ", line)
-        
-        parts = cmd.split('(',1)
-        cmd = parts[0]
-        param = parts[1][:-1]  # remove ending bracket
-        
-        if hasattr(CCommandCollection, 'ATTRIB_'+cmd):  # expand line, work VAL, EVAL...
-            
-            try:
-                res = getattr(g_CommandCollection, 'ATTRIB_'+cmd)(src, srcXML, param)
-                line = line[:cmd_start] + res + line[cmd_end+2:]
-                pos = cmd_start+len(res)
-            except:
-                dprint(__name__, 0, "XML_ExpandLine - Error in {0}\n{1}", line, traceback.format_exc())
-                line = line[:cmd_start] + "((ERROR:"+cmd+"))" + line[cmd_end+2:]
-        
-        elif hasattr(CCommandCollection, 'TREE_'+cmd):  # check other known cmds: COPY, CUT
-            dprint(__name__, 2, "XML_ExpandLine - stumbled over {0} in line {1}", cmd, line)
-            pos = cmd_end
-        else:
-            dprint(__name__, 0, "XML_ExpandLine - Found unknown cmd {0} in line {1}", cmd, line)
-            line = line[:cmd_start] + "((UNKNOWN:"+cmd+"))" + line[cmd_end+2:]    
-        
-        dprint(__name__, 2, "XML_ExpandLine: {0} - done", line)
-    return line
-
-"""
-# PlexAPI
-"""
-def PlexAPI_getTranscodePath(options, path):
-    UDID = options['PlexConnectUDID']
-    transcodePath = '/video/:/transcode/universal/start.m3u8?'
-    
-    quality = { '480p 2.0Mbps' :('720x480', '60', '2000'), \
-                '720p 3.0Mbps' :('1280x720', '75', '3000'), \
-                '720p 4.0Mbps' :('1280x720', '100', '4000'), \
-                '1080p 8.0Mbps' :('1920x1080', '60', '8000'), \
-                '1080p 10.0Mbps' :('1920x1080', '75', '10000'), \
-                '1080p 12.0Mbps' :('1920x1080', '90', '12000'), \
-                '1080p 20.0Mbps' :('1920x1080', '100', '20000'), \
-                '1080p 40.0Mbps' :('1920x1080', '100', '40000') }
-    setQuality = g_ATVSettings.getSetting(UDID, 'transcodequality')
-    vRes = quality[setQuality][0]
-    vQ = quality[setQuality][1]
-    mVB = quality[setQuality][2]
-    dprint(__name__, 1, "Setting transcode quality Res:{0} Q:{1} {2}Mbps", vRes, vQ, mVB)
-    sS = g_ATVSettings.getSetting(UDID, 'subtitlesize')
-    dprint(__name__, 1, "Subtitle size: {0}", sS)
-    aB = g_ATVSettings.getSetting(UDID, 'audioboost')
-    dprint(__name__, 1, "Audio Boost: {0}", aB)
-    
-    args = dict()
-    args['session'] = UDID
-    args['protocol'] = 'hls'
-    args['videoResolution'] = vRes
-    args['maxVideoBitrate'] = mVB
-    args['videoQuality'] = vQ
-    args['directStream'] = '1'
-    args['directPlay'] = '0'
-    args['subtitleSize'] = sS
-    args['audioBoost'] = aB
-    args['fastSeek'] = '1'
-    args['path'] = path
-    
-    xargs = PlexAPI_getXArgs(options)
-    
-    return transcodePath + urlencode(args) + '&' + urlencode(xargs)
-
-def PlexAPI_getXArgs(options=None):
-    xargs = dict()
-    xargs['X-Plex-Device'] = 'AppleTV'
-    xargs['X-Plex-Model'] = '3,1' # Base it on AppleTV model.
-    if not options is None:
-        if 'PlexConnectATVName' in options:
-            xargs['X-Plex-Device-Name'] = options['PlexConnectATVName'] # "friendly" name: aTV-Settings->General->Name.
-    xargs['X-Plex-Platform'] = 'iOS'
-    xargs['X-Plex-Client-Platform'] = 'iOS'
-    xargs['X-Plex-Platform-Version'] = '5.3' # Base it on AppleTV OS version.
-    xargs['X-Plex-Product'] = 'PlexConnect'
-    xargs['X-Plex-Version'] = '0.2'
-    
-    xargs['X-Plex-Client-Capabilities'] = "protocols=http-live-streaming,http-mp4-streaming,http-streaming-video,http-streaming-video-720p,http-mp4-video,http-mp4-video-720p;videoDecoders=h264{profile:high&resolution:1080&level:41};audioDecoders=mp3,aac{bitrate:160000}"
-    
-    return xargs
-
-
-
-"""
-# Command expander classes
-# CCommandHelper():
-#     base class to the following, provides basic parsing & evaluation functions
-# CCommandCollection():
-#     cmds to set up sources (ADDXML, VAR)
-#     cmds with effect on the tree structure (COPY, CUT) - must be expanded first
-#     cmds dealing with single node keys, text, tail only (VAL, EVAL, ADDR_PMS ,...)
-"""
-class CCommandHelper():
-    def __init__(self, options, PMSroot, path):
-        self.options = options
-        self.PMSroot = {'main': PMSroot}
-        self.path = {'main': path}
-        self.variables = {}
-    
-    # internal helper functions
-    def getParam(self, src, param):
-        parts = param.split(':',1)
-        param = parts[0]
-        leftover=''
-        if len(parts)>1:
-            leftover = parts[1]
-        
-        param = param.replace('&col;',':')  # colon  # replace XML_template special chars
-        param = param.replace('&ocb;','{')  # opening curly brace
-        param = param.replace('&ccb;','}')  # closinging curly brace
-        
-        param = param.replace('&quot;','"')  # replace XML special chars
-        param = param.replace('&apos;',"'")
-        param = param.replace('&lt;','<')
-        param = param.replace('&gt;','>')
-        param = param.replace('&amp;','&')  # must be last
-        
-        dprint(__name__, 2, "CCmds_getParam: {0}, {1}", param, leftover)
-        return [param, leftover]
-    
-    def getKey(self, src, srcXML, param):
-        attrib, leftover = self.getParam(src, param)
-        default, leftover = self.getParam(src, leftover)
-        
-        el, srcXML, attrib = self.getBase(src, srcXML, attrib)         
-        
-        UDID = self.options['PlexConnectUDID']
-        # walk the path if neccessary
-        while '/' in attrib and el!=None:
-            parts = attrib.split('/',1)
-            if parts[0].startswith('#'):  # internal variable in path
-                el = el.find(self.variables[parts[0][1:]])
-            elif parts[0].startswith('$'):  # setting
-                el = el.find(g_ATVSettings.getSetting(UDID, parts[0][1:]))
-            else:
-                el = el.find(parts[0])
-            attrib = parts[1]
-        
-        # check element and get attribute
-        if attrib.startswith('#'):  # internal variable
-            res = self.variables[attrib[1:]]
-            dfltd = False
-        elif attrib.startswith('$'):  # setting
-            res = g_ATVSettings.getSetting(UDID, attrib[1:])
-            dfltd = False
-        elif el!=None and attrib in el.attrib:
-            res = el.get(attrib)
-            dfltd = False
-        
-        else:  # path/attribute not found
-            res = default
-            dfltd = True
-        
-        dprint(__name__, 2, "CCmds_getKey: {0},{1},{2}", res, leftover,dfltd)
-        return [res,leftover,dfltd]
-    
-    def getElement(self, src, srcXML, param):
-        tag, leftover = self.getParam(src, param)
-        
-        el, srcXML, tag = self.getBase(src, srcXML, tag)
-        
-        # walk the path if neccessary
-        while True:
-            parts = tag.split('/',1)
-            el = el.find(parts[0])
-            if not '/' in tag or el==None:
-                break
-            tag = parts[1]
-        return [el, leftover]
-    
-    def getBase(self, src, srcXML, param):
-        # get base element
-        if param.startswith('@'):  # redirect to additional XML
-            parts = param.split('/',1)
-            srcXML = parts[0][1:]
-            src = self.PMSroot[srcXML]
-            leftover=''
-            if len(parts)>1:
-                leftover = parts[1]
-        elif param.startswith('/'):  # start at root
-            src = self.PMSroot['main']
-            leftover = param[1:]
-        else:
-            leftover = param
-        
-        return [src, srcXML, leftover]
-    
-    def getConversion(self, src, param):
-        conv, leftover = self.getParam(src, param)
-        
-        # build conversion "dictionary"
-        convlist = []
-        if conv!='':
-            parts = conv.split('|')
-            for part in parts:
-                convstr = part.split('=')
-                convlist.append((convstr[0], convstr[1]))
-        
-        dprint(__name__, 2, "CCmds_getConversion: {0},{1}", convlist, leftover)
-        return [convlist, leftover]
-    
-    def applyConversion(self, val, convlist):
-        # apply string conversion            
-        if convlist!=[]:
-            for part in reversed(sorted(convlist)):
-                if val>=part[0]:
-                    val = part[1]
-                    break
-        
-        dprint(__name__, 2, "CCmds_applyConversion: {0}", val)
-        return val
-    
-    def applyMath(self, val, math, frmt):
-        # apply math function - eval
-        try:
-            x = eval(val)
-            if math!='':
-                x = eval(math)
-            val = ('{0'+frmt+'}').format(x)
-        except:
-            dprint(__name__, 0, "CCmds_applyMath: Error in math {0}, frmt {1}\n{2}", math, frmt, traceback.format_exc())
-        # apply format specifier
-        
-        dprint(__name__, 2, "CCmds_applyMath: {0}", val)
-        return val
-    
-    def _(self, msgid):
-        return Localize.getTranslation(self.options['aTVLanguage']).ugettext(msgid)
-
-
-
-class CCommandCollection(CCommandHelper):
-    # XML TREE modifier commands
-    # add new commands to this list!
-    def TREE_COPY(self, elem, child, src, srcXML, param):
-        tag, param_enbl = self.getParam(src, param)
-
-        src, srcXML, tag = self.getBase(src, srcXML, tag)        
-        
-        # walk the src path if neccessary
-        while '/' in tag and src!=None:
-            parts = tag.split('/',1)
-            src = src.find(parts[0])
-            tag = parts[1]
-        
-        childToCopy = child
-        elem.remove(child)
-        
-        # duplicate child and add to tree
-        for elemSRC in src.findall(tag):
-            key = 'COPY'
-            if param_enbl!='':
-                key, leftover, dfltd = self.getKey(elemSRC, srcXML, param_enbl)
-                conv, leftover = self.getConversion(elemSRC, leftover)
-                if not dfltd:
-                    key = self.applyConversion(key, conv)
-            
-            if key:
-                el = copy.deepcopy(childToCopy)
-                XML_ExpandTree(el, elemSRC, srcXML)
-                XML_ExpandAllAttrib(el, elemSRC, srcXML)
-                
-                if el.tag=='__COPY__':
-                    for child in list(el):
-                        elem.append(child)
-                else:
-                    elem.append(el)
-            
-        return True  # tree modified, nodes updated: restart from 1st elem
-    
-    def TREE_CUT(self, elem, child, src, srcXML, param):
-        key, leftover, dfltd = self.getKey(src, srcXML, param)
-        conv, leftover = self.getConversion(src, leftover)
-        if not dfltd:
-            key = self.applyConversion(key, conv)
-        if key:
-            elem.remove(child)
-            return True  # tree modified, node removed: restart from 1st elem
-        else:
-            return False  # tree unchanged
-    
-    def TREE_ADDXML(self, elem, child, src, srcXML, param):
-        tag, leftover = self.getParam(src, param)
-        key, leftover, dfltd = self.getKey(src, srcXML, leftover)
-        
-        if key.startswith('/'):  # internal full path.
-            path = key
-        #elif key.startswith('http://'):  # external address
-        #    path = key
-        #    hijack = g_param['HostToIntercept']
-        #    if hijack in path:
-        #        dprint(__name__, 1, "twisting...")
-        #        hijack_twisted = hijack[::-1]
-        #        path = path.replace(hijack, hijack_twisted)
-        #        dprint(__name__, 1, path)
-        elif key == '':  # internal path
-            path = self.path[srcXML]
-        else:  # internal path, add-on
-            path = self.path[srcXML] + '/' + key
-        
-        PMS = XML_ReadFromURL(g_param['Addr_PMS'], path)
-        self.PMSroot[tag] = PMS.getroot()  # store additional PMS XML
-        self.path[tag] = path  # store base path
-        
-        return False  # tree unchanged (well, source tree yes. but that doesn't count...)
-    
-    def TREE_VAR(self, elem, child, src, srcXML, param):
-        var, leftover = self.getParam(src, param)
-        key, leftover, dfltd = self.getKey(src, srcXML, leftover)
-        conv, leftover = self.getConversion(src, leftover)
-        if not dfltd:
-            key = self.applyConversion(key, conv)
-        
-        self.variables[var] = key
-        return False  # tree unchanged
-    
-    
-    # XML ATTRIB modifier commands
-    # add new commands to this list!
-    def ATTRIB_VAL(self, src, srcXML, param):
-        key, leftover, dfltd = self.getKey(src, srcXML, param)
-        conv, leftover = self.getConversion(src, leftover)
-        if not dfltd:
-            key = self.applyConversion(key, conv)
-        return key
-    
-    def ATTRIB_EVAL(self, src, srcXML, param):
-        key, leftover, dfltd = self.getKey(src, srcXML, param)
-        math, leftover = self.getParam(src, leftover)
-        frmt, leftover = self.getParam(src, leftover)
-        if not dfltd:
-            key = self.applyMath(key, math, frmt)
-        return key
-    
-    def ATTRIB_SETTING(self, src, srcXML, param):
-        opt, leftover = self.getParam(src, param)
-        UDID = self.options['PlexConnectUDID']
-        return g_ATVSettings.getSetting(UDID, opt)
-    
-    def ATTRIB_ADDPATH(self, src, srcXML, param):
-        addpath, leftover, dfltd = self.getKey(src, srcXML, param)
-        if addpath.startswith('/'):
-            res = addpath
-        elif addpath == '':
-            res = self.path[srcXML]
-        else:
-            res = self.path[srcXML]+'/'+addpath
-        return res
-
-    def ATTRIB_BIGIMAGEURL(self, src, srcXML, param):
-        key, leftover, dfltd = self.getKey(src, srcXML, param)
-        return self.imageUrl(self.path[srcXML], key, 768, 768)
-    
-    def ATTRIB_IMAGEURL(self, src, srcXML, param):
-        key, leftover, dfltd = self.getKey(src, srcXML, param)
-        return self.imageUrl(self.path[srcXML], key, 384, 384)
-            
-    def imageUrl(self, path, key, width, height):
-        if key.startswith('/'):  # internal full path.
-            res = 'http://127.0.0.1:32400' + key
-        elif key.startswith('http://'):  # external address
-            res = key
-            hijack = g_param['HostToIntercept']
-            if hijack in res:
-                dprint(__name__, 1, "twisting...")
-                hijack_twisted = hijack[::-1]
-                res = res.replace(hijack, hijack_twisted)
-                dprint(__name__, 1, res)
-        else:
-            res = 'http://127.0.0.1:32400' + path + '/' + key
-        
-        # This is bogus (note the extra path component) but ATV is stupid when it comes to caching images, it doesn't use querystrings.
-        # Fortunately PMS is lenient...
-        #
-        return 'http://' + g_param['Addr_PMS'] + '/photo/:/transcode/%s/?width=%d&height=%d&url=' % (quote_plus(res), width, height) + quote_plus(res)
-            
-    def ATTRIB_URL(self, src, srcXML, param):
-        key, leftover, dfltd = self.getKey(src, srcXML, param)
-        if key.startswith('/'):  # internal full path.
-            res = 'http://' + g_param['HostOfPlexConnect'] + key
-        elif key.startswith('http://'):  # external address
-            res = key
-            hijack = g_param['HostToIntercept']
-            if hijack in res:
-                dprint(__name__, 1, "twisting...")
-                hijack_twisted = hijack[::-1]
-                res = res.replace(hijack, hijack_twisted)
-                dprint(__name__, 1, res)
-        elif key == '':  # internal path
-            res = 'http://' + g_param['HostOfPlexConnect'] + self.path[srcXML]
-        else:  # internal path, add-on
-            res = 'http://' + g_param['HostOfPlexConnect'] + self.path[srcXML] + '/' + key
-        return res
-    
-    def ATTRIB_MEDIAURL(self, src, srcXML, param):
-        Video, leftover = self.getElement(src, srcXML, param)
-        
-        if Video!=None:
-            Media = Video.find('Media')
-        
-        # check "Media" element and get key
-        if Media!=None:
-            UDID = self.options['PlexConnectUDID']
-            
-            if g_ATVSettings.getSetting(UDID, 'forcedirectplay')=='True' \
-               or \
-               g_ATVSettings.getSetting(UDID, 'forcetranscode')!='True' and \
-               Media.get('protocol','-') in ("hls") \
-               or \
-               g_ATVSettings.getSetting(UDID, 'forcetranscode')!='True' and \
-               Media.get('container','-') in ("mov", "mp4") and \
-               Media.get('videoCodec','-') in ("mpeg4", "h264", "drmi") and \
-               Media.get('audioCodec','-') in ("aac", "ac3", "drms"):
-                # direct play for...
-                #    force direct play
-                # or HTTP live stream
-                # or native aTV media
-                res, leftover, dfltd = self.getKey(Media, srcXML, 'Part/key')
-                
-                if Media.get('indirect',None):  # indirect... todo: select suitable resolution, today we just take first Media
-                    key, leftover, dfltd = self.getKey(Media, srcXML, 'Part/key')
-                    PMS = XML_ReadFromURL(g_param['Addr_PMS'], key)  # todo... check key for trailing '/' or even 'http'
-                    res, leftover, dfltd = self.getKey(PMS.getroot(), srcXML, 'Video/Media/Part/key')
-                
-            else:
-                # request transcoding
-                res = Video.get('key','')
-                res = PlexAPI_getTranscodePath(self.options, res)
-        else:
-            dprint(__name__, 0, "MEDIAPATH - element not found: {0}", param)
-            res = 'FILE_NOT_FOUND'  # not found?
-        
-        if res.startswith('/'):  # internal full path.
-            res = 'http://' + g_param['Addr_PMS'] + res
-        elif res.startswith('http://'):  # external address
-            hijack = g_param['HostToIntercept']
-            if hijack in res:
-                dprint(__name__, 1, "twisting...")
-                hijack_twisted = hijack[::-1]
-                res = res.replace(hijack, hijack_twisted)
-                dprint(__name__, 1, res)
-        else:  # internal path, add-on
-            res = 'http://' + g_param['Addr_PMS'] + self.path[srcXML] + res
-        return res
-            
-    def ATTRIB_ADDR_PMS(self, src, srcXML, param):
-        return g_param['Addr_PMS']
-    
-    def ATTRIB_episodestring(self, src, srcXML, param):
-        parentIndex, leftover, dfltd = self.getKey(src, srcXML, param)  # getKey "defaults" if nothing found.
-        index, leftover, dfltd = self.getKey(src, srcXML, leftover)
-        title, leftover, dfltd = self.getKey(src, srcXML, leftover)
-        out = self._("{0:0d}x{1:02d} {2}").format(int(parentIndex), int(index), title)
-        return out
-    
-    def ATTRIB_sendToATV(self, src, srcXML, param):
-        ratingKey, leftover, dfltd = self.getKey(src, srcXML, param)  # getKey "defaults" if nothing found.
-        duration, leftover, dfltd = self.getKey(src, srcXML, leftover)
-        UDID = self.options['PlexConnectUDID']
-        out = "atv.sessionStorage['ratingKey']='" + ratingKey + "';atv.sessionStorage['duration']='" + duration + "';" + \
-              "atv.sessionStorage['showplayerclock']='" + g_ATVSettings.getSetting(UDID, 'showplayerclock') + "';" + \
-              "atv.sessionStorage['showendtime']='" + g_ATVSettings.getSetting(UDID, 'showendtime') + "';" + \
-              "atv.sessionStorage['overscanadjust']='" + g_ATVSettings.getSetting(UDID, 'overscanadjust') + "';" + \
-              "atv.sessionStorage['clockposition']='" + g_ATVSettings.getSetting(UDID, 'clockposition') + "';" + \
-              "atv.sessionStorage['timeformat']='" + g_ATVSettings.getSetting(UDID, 'timeformat') + "';"
-        return out 
-    
-    def ATTRIB_getDurationString(self, src, srcXML, param):
-        duration, leftover, dfltd = self.getKey(src, srcXML, param)
-        min = int(duration)/1000/60
-        UDID = self.options['PlexConnectUDID']
-        if g_ATVSettings.getSetting(UDID, 'durationformat') == 'Minutes':
-            return self._("{0:d} Minutes").format(min)
-        else:
-            if len(duration) > 0:
-                hour = min/60
-                min = min%60
-                if hour == 0: return self._("{0:d} Minutes").format(min)
-                else: return self._("{0:d}hr {1:d}min").format(hour, min)
-        return ""
-    
-    def ATTRIB_contentRating(self, src, srcXML, param):
-        rating, leftover, dfltd = self.getKey(src, srcXML, param)
-        if rating.find('/') != -1:
-            parts = rating.split('/')
-            return parts[1]
-        else:
-            return rating
-        
-    def ATTRIB_unwatchedCountGrid(self, src, srcXML, param):
-        total, leftover, dfltd = self.getKey(src, srcXML, param)
-        viewed, leftover, dfltd = self.getKey(src, srcXML, leftover)
-        unwatched = int(total) - int(viewed)
-        return str(unwatched)
-    
-    def ATTRIB_unwatchedCountList(self, src, srcXML, param):
-        total, leftover, dfltd = self.getKey(src, srcXML, param)
-        viewed, leftover, dfltd = self.getKey(src, srcXML, leftover)
-        unwatched = int(total) - int(viewed)
-        if unwatched > 0: return self._("{0} unwatched").format(unwatched)
-        else: return ""
-    
-    def ATTRIB_TEXT(self, src, srcXML, param):
-        return self._(param)
-    
-    def ATTRIB_PMSCOUNT(self, src, srcXML, param):
-        return str(len(g_param['PMS_list']))
-    
-    def ATTRIB_PMSNAME(self, src, srcXML, param):
-        UDID = self.options['PlexConnectUDID']
-        PMS_list = g_param['PMS_list']
-        PMS_uuid = g_ATVSettings.getSetting(UDID, 'pms_uuid')
-        
-        if len(PMS_list)==0:
-            return "[no Server in Proximity]"
-        else:
-            PMS_uuid = g_ATVSettings.getSetting(self.options['PlexConnectUDID'], 'pms_uuid')
-            if PMS_uuid in PMS_list:
-                return PMS_list[PMS_uuid]['serverName'].decode('utf-8', 'replace')  # return as utf-8
-            else:
-                return '[PMS_uuid not found]'
-
-
-
-if __name__=="__main__":
+def InitCfg():
     cfg = Settings.CSettings()
     param = {}
     param['CSettings'] = cfg
-    
+
     param['Addr_PMS'] = '*Addr_PMS*'
     param['HostToIntercept'] = 'trailers.apple.com'
     setParams(param)
-    
+
     cfg = ATVSettings.CATVSettings()
     setATVSettings(cfg)
+    return
+
+if __name__=="__main__":
+    print "SageXML Main"
+    InitCfg()
     
-    print "load PMS XML"
-    _XML = '<PMS number="1" string="Hello"> \
-                <DATA number="42" string="World"></DATA> \
-                <DATA string="Sun"></DATA> \
-            </PMS>'
-    PMSroot = etree.fromstring(_XML)
-    PMSTree = etree.ElementTree(PMSroot)
-    XML_prettyprint(PMSTree)
-    
-    print
-    print "load aTV XML template"
-    _XML = '<aTV> \
-                <INFO num="{{VAL(number)}}" str="{{VAL(string)}}">Info</INFO> \
-                <FILE str="{{VAL(string)}}" strconv="{{VAL(string::World=big|Moon=small|Sun=huge)}}" num="{{VAL(number:5)}}" numfunc="{{EVAL(number:5:int(x/10):&amp;col;02d)}}"> \
-                    File{{COPY(DATA)}} \
-                </FILE> \
-                <PATH path="{{ADDPATH(file:unknown)}}" /> \
-                <accessories> \
-                    <cut />{{CUT(number::0=cut|1=)}} \
-                    <dontcut />{{CUT(attribnotfound)}} \
-                </accessories> \
-                <ADDPATH>{{ADDPATH(string)}}</ADDPATH> \
-                <ADDR_PMS>{{ADDR_PMS()}}</ADDR_PMS> \
-                <COPY2>={{COPY(DATA)}}=</COPY2> \
-            </aTV>'
-    aTVroot = etree.fromstring(_XML)
-    aTVTree = etree.ElementTree(aTVroot)
-    XML_prettyprint(aTVTree)
-    
-    print
-    print "unpack PlexConnect COPY/CUT commands"
-    options = {}
-    options['PlexConnectUDID'] = '007'
-    g_CommandCollection = CCommandCollection(options, PMSroot, '/library/sections/')
-    XML_ExpandTree(aTVroot, PMSroot, 'main')
-    XML_ExpandAllAttrib(aTVroot, PMSroot, 'main')
-    del g_CommandCollection
-    
-    print
-    print "resulting aTV XML"
-    XML_prettyprint(aTVTree)
-    
-    print
-    #print "store aTV XML"
-    #str = XML_prettystring(aTVTree)
-    #f=open(sys.path[0]+'/XML/aTV_fromTmpl.xml', 'w')
-    #f.write(str)
-    #f.close()
-    
-    del cfg
