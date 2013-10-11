@@ -296,19 +296,10 @@ def makeTopMenu():
     dprint(__name__, 1, "====== makeTopMenu ======" )
     InitCfg()
 
-    # Get the IP Address of the SageTV Server
-    if g_param['CSettings'].getSetting('ip_sagetv')<>'':
-        sage_ip = g_param['CSettings'].getSetting('ip_sagetv')
-
     # Get the IP of the SageTV Connect Server
     # -- hopefully this is the same server soon
     if g_param['CSettings'].getSetting('ip_webserver')<>'':
         stv_cnct_ip = g_param['CSettings'].getSetting('ip_webserver')
-
-    # default password is "port"
-    if g_param['CSettings'].getSetting('port_sagetv')<>'':
-        sage_port = g_param['CSettings'].getSetting('port_sagetv')
-
     
     #<atv>
     #    <head>
@@ -426,9 +417,9 @@ def makeRecordedShowList():
     ATVBody = etree.SubElement(ATVRoot, 'body')
     ATVListWPreview = etree.SubElement(ATVBody, 'listWithPreview')
     ATVListWPreview.set('id', "Show_List")
-    ATVListWPreview.set('volatile', "true")
-    ATVListWPreview.set('onVolatileReload', "atv.loadAndSwapURL(http://" + stv_cnct_ip + "/recordedShows.xml)")
-    
+#    ATVListWPreview.set('volatile', "true")
+#    ATVListWPreview.set('onVolatileReload', "atv.loadAndSwapURL(http://" + stv_cnct_ip + "/recordedShows.xml)")
+
     ATV_LSS_Header = etree.SubElement(ATVListWPreview, 'header')
     ATV_LSS_SimpleHeader = etree.SubElement(ATV_LSS_Header, 'simpleHeader')
     ATV_LSS_SH_Title = etree.SubElement(ATV_LSS_SimpleHeader, 'title')
@@ -506,7 +497,7 @@ def makeRecordedShowList():
     #
     # Get the XML from the SageTV Server
     #
-    stv_address = sagetv_user + ":" + sagetv_pass + "@" + sagetv_ip
+    stv_address = username + ":" + password + "@" + sagetv_ip
     stv_address = "http://" + stv_address
     stv_path = "/sagem/m/recordings.jsp"
 
@@ -551,7 +542,7 @@ def makeRecordedShowList():
                     href = href.replace('\'', '&apos;')
 
                     # make sure there are no spaces in the href
-                    href = "atv.loadURL('http://" + sagetv_ip + "/title=" + href + "')"
+                    href = "atv.loadURL('http://" + stv_cnct_ip + "/title=" + href + "')"
                     dprint(__name__, 2, "---- href ---> {0}", href )
 
                     # add to show list
