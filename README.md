@@ -23,13 +23,16 @@ The SageConnect server must:
 
 ## How To Install
 
-(mostly copied from the PlexConnect Page)
+(mostly copied from the [Wiki - Install guides][])
 
-1. Follow this (add link) guide to create and add a custom certificate to all of your Apple TVs
+1. Follow this [SSL+ATV][] guide to create and add a custom certificate to all of your Apple TVs
 
-2. Download and install SageConnect
+2. Download and install SageConnect via Git or a [ZIP][]
 
-3. do more stuff
+3. Extract into any directory
+
+4. Run the code "sudo nohup ./PlexConnect"
+* note: this will at some point be renamed, etc. Right now this is alpha to get folks running
 
 
 ```sh
@@ -45,7 +48,7 @@ git pull
 - install certificate to ```assets/certificate/```
 - install certificate on aTV
 
-See the [Wiki - Install guides][] for additional documentation.
+See the PlexConnect [Wiki - Install guides][] for additional documentation.
 
 
 ## Usage
@@ -122,6 +125,7 @@ So within some limits, you can do with the code whatever you want. However, if y
 The software is provided as is. It might work as expected - or not. Just don't blame us.
 
 
+[SSL+ATV]: http://langui.sh/2013/08/27/appletv-ssl-plexconnect/
 [PlexConnect]: https://github.com/iBaa/PlexConnect
 [ATVBrowser]: https://github.com/finkdiff/ATVBrowser-script/tree/atvxml
 [Plex Forum thread]: http://forums.plexapp.com/index.php/topic/57831-plex-atv-think-different
