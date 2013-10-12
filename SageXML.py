@@ -322,24 +322,35 @@ def makeTopMenu():
     #				</simpleHeader>
     #			</header>
     ATVBody = etree.SubElement(ATVRoot, 'body')
-    ATVListWPreview = etree.SubElement(ATVBody, 'listWithPreview')
+
+    # list on left, header in middle
+#    ATVListWPreview = etree.SubElement(ATVBody, 'listScrollerSplit')
+    # List on right, header on right (centered over list)
+    #    ATVListWPreview = etree.SubElement(ATVBody, 'listWithPreview')
+#ATVListWPreview = etree.SubElement(ATVBody, 'scroller') # does not work in this config
+    ATVListWPreview = etree.SubElement(ATVBody, 'optionDialog') # Centered and Centered!
     ATVListWPreview.set('id', "com.sample.movie-grid")
-    ATVListWPreview.set('volatile', "true")
-    ATVListWPreview.set('onVolatileReload', "atv.loadAndSwapURL('http://" + stv_cnct_ip  + "/SageConnect.xml')")
+#    ATVListWPreview.set('volatile', "true")
+#    ATVListWPreview.set('onVolatileReload', "atv.loadAndSwapURL('http://" + stv_cnct_ip  + "/SageConnect.xml')")
 
     ATV_LSS_Header = etree.SubElement(ATVListWPreview, 'header')
     ATV_LSS_SimpleHeader = etree.SubElement(ATV_LSS_Header, 'simpleHeader')
     ATV_LSS_SH_Title = etree.SubElement(ATV_LSS_SimpleHeader, 'title')
-    ATV_LSS_SH_Title.text = "SageTV"
+    ATV_LSS_SH_Title.text = "SageTV Connect"
     ATV_LSS_SH_Title = etree.SubElement(ATV_LSS_SimpleHeader, 'subtitle')
-    ATV_LSS_SH_Title.text = "Viewing Options"
-    
+    ATV_LSS_SH_Title.text = "Available Media"
+
+#    ATV_LSS_Desc = etree.SubElement(ATVListWPreview, 'description')
+#    ATV_LSS_Desc.text = "This is the description field"
+
+
     #        <menu>
     #            <sections>
     #                <menuSection>
     ATV_LSS_Menu = etree.SubElement(ATVListWPreview, 'menu')
     ATV_LSS_Sections = etree.SubElement(ATV_LSS_Menu, 'sections')
     ATV_LSS_MenuSections = etree.SubElement(ATV_LSS_Sections, 'menuSection')
+
 
     #        <items>
     ATV_LSS_MS_Items = etree.SubElement(ATV_LSS_MenuSections, 'items')
@@ -415,7 +426,7 @@ def makeRecordedShowList():
     #				</simpleHeader>
     #			</header>
     ATVBody = etree.SubElement(ATVRoot, 'body')
-    ATVListWPreview = etree.SubElement(ATVBody, 'listWithPreview')
+    ATVListWPreview = etree.SubElement(ATVBody, 'optionDialog')
     ATVListWPreview.set('id', "Show_List")
 #    ATVListWPreview.set('volatile', "true")
 #    ATVListWPreview.set('onVolatileReload', "atv.loadAndSwapURL(http://" + stv_cnct_ip + "/recordedShows.xml)")
@@ -425,7 +436,7 @@ def makeRecordedShowList():
     ATV_LSS_SH_Title = etree.SubElement(ATV_LSS_SimpleHeader, 'title')
     ATV_LSS_SH_Title.text = "Recordings"
     ATV_LSS_SH_Title = etree.SubElement(ATV_LSS_SimpleHeader, 'subtitle')
-    ATV_LSS_SH_Title.text = "All Available Shows"
+    ATV_LSS_SH_Title.text = "Currently Available Shows"
     
 
     #    <preview>
@@ -780,7 +791,7 @@ def makeShowList(atvTitle):
     #				</simpleHeader>
     #			</header>
     ATVBody = etree.SubElement(ATVRoot, 'body')
-    ATVListWPreview = etree.SubElement(ATVBody, 'listWithPreview')
+    ATVListWPreview = etree.SubElement(ATVBody, 'optionDialog')
     ATVListWPreview.set('id', "Show_List")
     #
     # The loadAndSwapURL needs to be the URL of this page.... not sure I have that?
@@ -791,9 +802,9 @@ def makeShowList(atvTitle):
     ATV_LSS_Header = etree.SubElement(ATVListWPreview, 'header')
     ATV_LSS_SimpleHeader = etree.SubElement(ATV_LSS_Header, 'simpleHeader')
     ATV_LSS_SH_Title = etree.SubElement(ATV_LSS_SimpleHeader, 'title')
-    ATV_LSS_SH_Title.text = "Recordings"
+    ATV_LSS_SH_Title.text = "Episodes"
     ATV_LSS_SH_Title = etree.SubElement(ATV_LSS_SimpleHeader, 'subtitle')
-    ATV_LSS_SH_Title.text = "All Available Shows"
+    ATV_LSS_SH_Title.text = "Current Episodes"
     
     
     #    <preview>
@@ -1777,7 +1788,7 @@ def generatePathXML(path, myList):
     #				</simpleHeader>
     #			</header>
     ATVBody = etree.SubElement(ATVRoot, 'body')
-    ATVListWPreview = etree.SubElement(ATVBody, 'listWithPreview')
+    ATVListWPreview = etree.SubElement(ATVBody, 'optionDialog')
     ATVListWPreview.set('id', "Show_List")
     #    ATVListScrollSplit.set('volatile', "true")
     #    ATVListScrollSplit.set('onVolatileReload', "atv.loadAndSwapURL(http://sagetvconnect.server/anything.xml)")
@@ -1785,7 +1796,13 @@ def generatePathXML(path, myList):
     ATV_LSS_Header = etree.SubElement(ATVListWPreview, 'header')
     ATV_LSS_SimpleHeader = etree.SubElement(ATV_LSS_Header, 'simpleHeader')
     ATV_LSS_SH_Title = etree.SubElement(ATV_LSS_SimpleHeader, 'title')
-    ATV_LSS_SH_Title.text = path[path.rfind('/'):]
+    if path == "":
+        titleText = "Imported Media Drives"
+    elif path.find('/') <= 0:
+        titleText = "Drive " + path[:path.find(':')]
+    else:
+        titleText = path[path.rfind('/')+1:]
+    ATV_LSS_SH_Title.text = titleText
     ATV_LSS_SH_Title = etree.SubElement(ATV_LSS_SimpleHeader, 'subtitle')
     ATV_LSS_SH_Title.text = path
     
