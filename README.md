@@ -92,12 +92,24 @@ certfile = ./assets/certificates/trailers.pem (this should be the name of your c
 prevent_atv_update = True (prevent appletv from auto updating)
 ```
 
-## ToDo
+## ToDo / Expected Problems
 
 * Learn and reuse the original PlexConnect Template mechanism (currently manually generating all menus)
 * Clean up all code (I've horribly uglied up the current PlexConnect release)
 * Make this able to run on the same box as the SageTV server (currently on a standalone)
-* Make this much much better looking (see item 1, hack)
+* Make this much much better looking (see item 1, hack <-- already started)
+* Test with / make work with Linux / MacOS imported media drives
+* Make resume work (currently if you stop, you have to start at begining and fast forward)
+
+## Screenshots
+Currently in the screenshots directory (appologies in advance that several of these are blurry, I'll try to grab a better camera and get some images that are not so bad)
+1. Image of the AppleTV main screen, notice that the Trailers app is selected ( you access this via the Trailers app)
+2. Image of main selection screen (recordings vs imported media)
+3. Image of root of imported media directory structure (Windows SageTV Server)
+4. Image of root of recorded media listing
+5. Image of Simpsons Episode list
+6. Image of Simpsons Episode information (The Bob Next Door)
+7. Image of the opening sequence playing from the Simpsons
 
 
 ## More detailed Information about the files
