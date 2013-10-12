@@ -1145,6 +1145,15 @@ def makeMediaInfo(atvAiring):
                                     epMediaID = epMediaID.strip(' \t\n\r')
                                     dprint(__name__, 2, "epMediaID --> {0}", epMediaID )
 
+                                # find episode Category:
+                                if div4.find('b') <> None and div4.find('b').text == "Category:":
+                                    epCategory = div4[0].tail
+                                    epCategory = epCategory.strip(' \t\n\r')
+                                    if epCategory.find('ReRun') > 0:
+                                        epCategory = epCategory[:epCategory.rfind('-')]
+                                        epCategory = epCategory.strip()
+                                    dprint(__name__, 2, "epCategory --> {0}", epCategory )
+
 
     dprint(__name__, 2, "---> For loop done")
 
@@ -1218,11 +1227,19 @@ def makeMediaInfo(atvAiring):
     #    </columnDefinitions>
     ATV_ID_T_CD = etree.SubElement(ATV_ID_Table, 'columnDefinitions')
 
-    ColumnDefinitionText = ['Details', 'Actors', 'Directors', 'Producers']
-    for cdCount in range (0,4):
+#    ColumnDefinitionText = ['Details', 'Actors', 'Directors', 'Producers']
+#    for cdCount in range (0,4):
+#        ATV_ID_T_CD1 = etree.SubElement(ATV_ID_T_CD, 'columnDefinition')
+#        ATV_ID_T_CD1.set("width","25")
+#        ATV_ID_T_CD1.set("alignment","left")
+#        ATV_ID_T_CD1_title = etree.SubElement(ATV_ID_T_CD1, 'title')
+#        ATV_ID_T_CD1_title.text = ColumnDefinitionText[cdCount]
+
+    ColumnDefinitionText = ['Details', 'Starring']
+    for cdCount in range (0,2):
         ATV_ID_T_CD1 = etree.SubElement(ATV_ID_T_CD, 'columnDefinition')
-        ATV_ID_T_CD1.set("width","25")
-        ATV_ID_T_CD1.set("alignment","left")
+        ATV_ID_T_CD1.set("width","50")
+        ATV_ID_T_CD1.set("alignment","center")
         ATV_ID_T_CD1_title = etree.SubElement(ATV_ID_T_CD1, 'title')
         ATV_ID_T_CD1_title.text = ColumnDefinitionText[cdCount]
 
@@ -1235,9 +1252,9 @@ def makeMediaInfo(atvAiring):
     #        </row>
     ATV_ID_T_Rows = etree.SubElement(ATV_ID_Table, 'rows')
     
-    rowText = ['Genre tag', 'Role tag', 'Director tag', 'Producer tag']
+    rowText = [epCategory, 'Role tag']
     ATV_ID_T_Row = etree.SubElement(ATV_ID_T_Rows, 'row')
-    for cdCount in range (0,4):
+    for cdCount in range (0,2):
         ATV_ID_T_Row_Label = etree.SubElement(ATV_ID_T_Row, 'label')
         ATV_ID_T_Row_Label.text = rowText[cdCount]
 
@@ -1247,9 +1264,9 @@ def makeMediaInfo(atvAiring):
     #            <label>{{VAL(Video/Director[2]/tag)}}</label>
     #            <label>{{VAL(Video/Producer[2]/tag)}}</label>
     #        </row>
-    rowText = ['duration', 'Role tag2', 'Director tag2', 'Producer tag2']
+    rowText = [epDuration, 'Role tag2']
     ATV_ID_T_Row = etree.SubElement(ATV_ID_T_Rows, 'row')
-    for cdCount in range (0,4):
+    for cdCount in range (0,2):
         ATV_ID_T_Row_Label = etree.SubElement(ATV_ID_T_Row, 'label')
         ATV_ID_T_Row_Label.text = rowText[cdCount]
 
@@ -1259,9 +1276,9 @@ def makeMediaInfo(atvAiring):
     #            <label>{{VAL(Video/Director[3]/tag)}}</label>
     #            <label>{{VAL(Video/Producer[3]/tag)}}</label>
     #        </row>
-    rowText = ['1080p AC3 5.1', 'Role tag3', 'Director tag3', 'Producer tag3']
+    rowText = ['1080p AC3 5.1', 'Role tag3']
     ATV_ID_T_Row = etree.SubElement(ATV_ID_T_Rows, 'row')
-    for cdCount in range (0,4):
+    for cdCount in range (0,2):
         ATV_ID_T_Row_Label = etree.SubElement(ATV_ID_T_Row, 'label')
         ATV_ID_T_Row_Label.text = rowText[cdCount]
 
@@ -1276,14 +1293,14 @@ def makeMediaInfo(atvAiring):
     #            <label>{{VAL(Video/Director[4]/tag)}}</label>
     #            <label>{{VAL(Video/Producer[4]/tag)}}</label>
     #        </row>
-    rowText = ['--', 'Role tag3', 'Director tag3', 'Producer tag3']
+    rowText = ['', 'Role tag4']
     ATV_ID_T_Row = etree.SubElement(ATV_ID_T_Rows, 'row')
     ATV_ID_T_Row_Star = etree.SubElement(ATV_ID_T_Row, 'starRating')
     ATV_ID_T_Row_Star.set("hasUserSetRating", "true")
     ATV_ID_T_Row_S_Pct = etree.SubElement(ATV_ID_T_Row_Star, 'percentage')
     ATV_ID_T_Row_S_Pct.text = "50"
 
-    for cdCount in range (1,4):
+    for cdCount in range (1,2):
         ATV_ID_T_Row_Label = etree.SubElement(ATV_ID_T_Row, 'label')
         ATV_ID_T_Row_Label.text = rowText[cdCount]
 
@@ -1347,17 +1364,17 @@ def makeMediaInfo(atvAiring):
     #        <image>resource://More.png</image>
     #        <focusedImage>resource://MoreFocused.png</focusedImage>
     #    </actionButton>
-    ATV_ID_CS_S_S_SS_I_AB = etree.SubElement(ATV_ID_CS_S_S_SS_I, 'actionButton')
-    ATV_ID_CS_S_S_SS_I_AB.set("id","selectAudioAndSubs")
-    TempStr = "atv.sessionStorage['addrpms']='" + stv_cnct_ip + "';atv.loadURL('http://" + stv_cnct_ip + "/MediaFileId=" + epMediaID + "')"
-    ATV_ID_CS_S_S_SS_I_AB.set("onSelect",TempStr)
-    ATV_ID_CS_S_S_SS_I_AB.set("onPlay",TempStr)
-    ATV_ID_CS_S_S_SS_I_AB_Title = etree.SubElement(ATV_ID_CS_S_S_SS_I_AB, 'title')
-    ATV_ID_CS_S_S_SS_I_AB_Title.text = "More"
-    ATV_ID_CS_S_S_SS_I_AB_Img = etree.SubElement(ATV_ID_CS_S_S_SS_I_AB, 'image')
-    ATV_ID_CS_S_S_SS_I_AB_Img.text = "resource://More.png"
-    ATV_ID_CS_S_S_SS_I_AB_Img = etree.SubElement(ATV_ID_CS_S_S_SS_I_AB, 'focusedImage')
-    ATV_ID_CS_S_S_SS_I_AB_Img.text = "resource://MoreFocused.png"
+#    ATV_ID_CS_S_S_SS_I_AB = etree.SubElement(ATV_ID_CS_S_S_SS_I, 'actionButton')
+#    ATV_ID_CS_S_S_SS_I_AB.set("id","selectAudioAndSubs")
+#    TempStr = "atv.sessionStorage['addrpms']='" + stv_cnct_ip + "';atv.loadURL('http://" + stv_cnct_ip + "/MediaFileId=" + epMediaID + "')"
+#    ATV_ID_CS_S_S_SS_I_AB.set("onSelect",TempStr)
+#    ATV_ID_CS_S_S_SS_I_AB.set("onPlay",TempStr)
+#    ATV_ID_CS_S_S_SS_I_AB_Title = etree.SubElement(ATV_ID_CS_S_S_SS_I_AB, 'title')
+#    ATV_ID_CS_S_S_SS_I_AB_Title.text = "More"
+#    ATV_ID_CS_S_S_SS_I_AB_Img = etree.SubElement(ATV_ID_CS_S_S_SS_I_AB, 'image')
+#    ATV_ID_CS_S_S_SS_I_AB_Img.text = "resource://More.png"
+#    ATV_ID_CS_S_S_SS_I_AB_Img = etree.SubElement(ATV_ID_CS_S_S_SS_I_AB, 'focusedImage')
+#    ATV_ID_CS_S_S_SS_I_AB_Img.text = "resource://MoreFocused.png"
 
 
 
