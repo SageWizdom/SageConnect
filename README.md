@@ -1,6 +1,6 @@
 # SageConnect
 
-SageConnect is a SageTV fork of [PlexConnect][].  Right off the bat, major credit and thanks to iBaa, roidy, and elan and all the rest, for their crazy good work on PlexConnect.  Also, many thanks to Nielm and the SageTV developers of..... (update with appropriate credit)
+SageConnect is a SageTV fork of [PlexConnect][].  Right off the bat, major credit and thanks to iBaa, roidy, and elan and all the rest, for their crazy good work on PlexConnect.  Also, many thanks to nielm, jreichen, emok, PiX64 and any of the contributing SageTV developers I may have missed.
 
 This code is a fork of [PlexConnect][] modified to work with SageTV.  It is currently VERY alpha. Let me repeat, VERY ALPHA.  It works, it streams video and imported media to any AppleTv, but right now it is totally a hack.  That said, please play with this, fix, help, etc.
 
@@ -27,8 +27,8 @@ The SageConnect server must:
 
 1. Follow this [SSL+ATV][] guide to create and add the custom HTTPS/SSL certificate to all of your Apple TVs
 
-2. Set your AppleTV to use your new servers IP as its DNS server (all else can stay the same)
--- Note, you want to use a static IP for your DNS server
+2. Set your AppleTV to use your new SageConnect server's IP as its DNS server (all else can stay the same)
+-- Note, you want to use a static IP for your SageConnect server 
 
 3. Download and install SageConnect via Git or as a [ZIP][] file
 ```sh
@@ -45,7 +45,7 @@ git pull
 
 6. Run the code once and kill it (ctrl-c) to generate a config file (Settings.cfg)
 
-7. Configure everything see [Configuring SageConnect][] below
+7. Configure everything see [Configuring SageConnect](## Configuring SageConnect) below
 
 8. Run the code "sudo nohup ./PlexConnect" so that it runs, and continues to run even after you log out.
 
