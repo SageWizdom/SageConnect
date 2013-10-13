@@ -802,7 +802,9 @@ def makeShowList(atvTitle):
     ATV_LSS_Header = etree.SubElement(ATVListWPreview, 'header')
     ATV_LSS_SimpleHeader = etree.SubElement(ATV_LSS_Header, 'simpleHeader')
     ATV_LSS_SH_Title = etree.SubElement(ATV_LSS_SimpleHeader, 'title')
-    ATV_LSS_SH_Title.text = "Episodes"
+    titleText = atvTitle[atvTitle.find('=')+1:]
+    titleText = titleText.replace('+',' ')
+    ATV_LSS_SH_Title.text = titleText
     ATV_LSS_SH_Title = etree.SubElement(ATV_LSS_SimpleHeader, 'subtitle')
     ATV_LSS_SH_Title.text = "Current Episodes"
     
@@ -1069,6 +1071,7 @@ def makeMediaInfo(atvAiring):
     epRating = ""
     epStarring = ""
     epMediaID = ""
+    epCategory = ""
 
 
     # check through each top level div
@@ -1655,10 +1658,19 @@ def makeDirTree():
                     segment = segmentList.find('segment')
                     path = segment.get('filePath')
                     
+                    # possible fix for linux paths
+                    # replace all forward slashes with back slashes
+                    # remove the first slash, so that it is like the " drive" letter
+                    path = path.replace('/','\\')
+                    path = path.strip('\\')
+                    
                     # parse the file path
                     # make me a sub function probably
                     if path is not "":
-                        diskLetter = path[0:path.find(":") + 1]
+                        # also part of working on a Linux path
+                        diskLetter = path[:path.find(":") + 1]
+                        if diskLetter == "":
+                            diskLetter = path[:path.find("\\")]
                         
                         diskNode = None
                         for disk in IMT_Root.findall('path'):
@@ -1708,28 +1720,6 @@ def makeDirTree():
 
 def findNode(xmlRoot, Path):
     dprint(__name__, 1, "====== findNode ======: xmlRoot : {0}", Path)
-    InitCfg()
-        
-    # Get the IP of the SageTV Server
-    if g_param['CSettings'].getSetting('ip_sagetv')<>'':
-        sagetv_ip = g_param['CSettings'].getSetting('ip_sagetv')
-    
-    # Get the IP of the SageTV Connect Server
-    # -- hopefully this is the same server soon
-    if g_param['CSettings'].getSetting('ip_webserver')<>'':
-        stv_cnct_ip = g_param['CSettings'].getSetting('ip_webserver')
-    
-    if g_param['CSettings'].getSetting('sagetv_user')<>'':
-        username = g_param['CSettings'].getSetting('sagetv_user')
-    
-    if g_param['CSettings'].getSetting('sagetv_pass')<>'':
-        password = g_param['CSettings'].getSetting('sagetv_pass')
-    
-    textURL = "/sage/Search?SearchString=&searchType=MediaFiles&Video=on&search_fields=title&filename=&TimeRange=0&Categories=**Any**&Channels=**Any**&watched=any&dontlike=any&favorite=any&firstruns=any&hdtv=any&archived=any&manrec=any&autodelete=any&partials=none&sort1=title_asc&sort2=none&grouping=None&pagelen=100&xml=yes"
-    
-    textURL = "http://" + username + ":" + password + "@" + sagetv_ip + textURL
-    dprint(__name__, 2, "--> {0}", textURL )
-
 
     #    if xmlRoot.get('id') is not None:
     #        print "---xmlRoot-->" + xmlRoot.get('id')
@@ -1754,7 +1744,7 @@ def findNode(xmlRoot, Path):
             if node.get('id') == Path:
                 return node
     
-    dprint(__name__, 2, "--none--<" )
+    dprint(__name__, 0, "Could not find path: {0}", Path )
     
     return None
 
@@ -1949,7 +1939,7 @@ def makeDirList(path):
 #        file.write()
 #        file.write(XML_prettystring(XML))
         xmlstring = etree.tostring(XML)
-        xmlstring = xmlstring.replace( '\'', '&apos;')
+#        xmlstring = xmlstring.replace( '\'', '&apos;')
 
         file.write(xmlstring)
         file.close()
