@@ -105,12 +105,19 @@ prevent_atv_update = True (prevent appletv from auto updating)
 
 ## Screenshots
 Currently in the screenshots directory (appologies in advance that several of these are blurry, I'll try to grab a better camera and get some images that are not so bad)
+
 1. Image of the AppleTV main screen, notice that the Trailers app is selected ( you access this via the Trailers app)
+
 2. Image of main selection screen (recordings vs imported media)
+
 3. Image of root of imported media directory structure (Windows SageTV Server)
+
 4. Image of root of recorded media listing
+
 5. Image of Simpsons Episode list
+
 6. Image of Simpsons Episode information (The Bob Next Door)
+
 7. Image of the opening sequence playing from the Simpsons
 
 
