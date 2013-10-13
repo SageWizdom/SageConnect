@@ -97,11 +97,11 @@ prevent_atv_update = True (prevent appletv from auto updating)
 * Learn and reuse the original PlexConnect Template mechanism (currently manually generating all menus)
 * Clean up all code (I've horribly uglied up the current PlexConnect release)
 * Make this able to run on the same box as the SageTV server (currently on a standalone)
-* Make this much much better looking (see item 1, hack <-- already started)
-* Test with / make work with Linux / MacOS imported media drives <-- currently working on this
 * Make resume work (currently if you stop, you have to start at begining and fast forward)
 * Support streaming live TV (have an idea how to do it, but might be a bit wacky)
 * Issue: If you view a currently recording show, it will start at the live time, not at the begining.
+* FIXED?: Make this much much better looking (see item 1, hack <-- already started)
+* FIXED?: Test with / make work with Linux / MacOS imported media drives <-- currently working on this
 
 ## Screenshots
 Currently in the screenshots directory (appologies in advance that several of these are blurry, I'll try to grab a better camera and get some images that are not so bad)
