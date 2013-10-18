@@ -163,7 +163,7 @@ def XML_PMS2aTV(address, path, options):
 # There is probably a "correct" way to do this.. I'll have to look into this.
 #
     dprint(__name__, 1, "--path-----> {0}", path)
-    path = path.replace('*',' ')
+    path = path.replace('+',' ')
     path = path.replace('&apos;','\'')
     # for now, we are ignoring the address passed
     #    print "--address--> " + address
@@ -174,11 +174,21 @@ def XML_PMS2aTV(address, path, options):
         aTVroot = SageXML.makeTopMenu()
         return etree.tostring(aTVroot)
 
+    #========== Display example layouts ===========
+    # Make and return a list of all recorded shows
+    elif path.find("exampleLayouts=") > 0:
+        aTVroot = SageXML.makeExample(path)
+        return etree.tostring(aTVroot)
+
     #========== Handle / Manage recorded shows ===========
     # Make and return a list of all recorded shows
     elif path.find("recordedShows") > 0:
         aTVroot = SageXML.makeRecordedShowList()
-#        aTVroot = makeTitleGrid()
+        return etree.tostring(aTVroot)
+
+    # Make and return a list of all recorded shows
+    elif path.find("recordedGrid") > 0:
+        aTVroot = SageXML.makeTitleGrid(path)
         return etree.tostring(aTVroot)
 
     # if given a show title, make a list of all episodes
@@ -206,6 +216,25 @@ def XML_PMS2aTV(address, path, options):
     elif path.find("mediaPath") > 0:
         aTVroot = SageXML.makeDirList(path[path.find('=')+1:])
         return etree.tostring(aTVroot)
+
+    #========== Search ===========
+
+    # when search main is requested
+    elif path.find("mediaSearch") > 0:
+        aTVroot = SageXML.searchTitle()
+        return etree.tostring(aTVroot)
+
+    # when a search query comes through
+    elif path.find("search?") > 0:
+        aTVroot = SageXML.searchMedia(path)
+        return etree.tostring(aTVroot)
+
+    #========== Playtime Feedback (for resume) ===========
+
+    # when search main is requested
+    elif path.find("timeline") > 0:
+        SageXML.setTimeline(path)
+        return
 
     # Generate an error
     return XML_Error('SageTV Connect', 'Unable to handle request, please try again.')
