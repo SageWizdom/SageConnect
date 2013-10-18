@@ -112,7 +112,7 @@ class MyHandler(BaseHTTPRequestHandler):
                         else:
                             self.send_header('Content-type', 'image/png')
                         self.end_headers()
-                        self.wfile.write(SageXML.getTrailers(self.path, "True"))
+                        self.wfile.write(SageXML.getTrailers(self.path, "True", self.headers))
                         return
 
                 # serve "application.js" to aTV
@@ -164,7 +164,7 @@ class MyHandler(BaseHTTPRequestHandler):
                 if True:
                     dprint(__name__, 1, "serving .xml: " + self.path + " : " + args )
 #                    XML = XMLConverter.XML_PMS2aTV(self.client_address, self.path + args, options)
-                    XML = SageXML.XML_STV2aTV(self.client_address, self.path + args, options)
+                    XML = SageXML.XML_STV2aTV(self.client_address, self.path + args, options, self.headers)
 
                     self.send_response(200)
                     self.send_header('Content-type', 'text/xml')

@@ -366,13 +366,9 @@ def makeTopMenu():
     #
     # Add Generic SageTV item.... use this to show current status
     #
-    href = "http://" + stv_cnct_ip + "/recordedShows.xml"
-    hdrhref = "atv.loadURL('" + href + "')"
     label = "SageTV"
     ATV_LSS_MS_I_Item = etree.SubElement(ATV_LSS_MS_Items, 'twoLineEnhancedMenuItem')
     ATV_LSS_MS_I_Item.set("id", label )
-    ATV_LSS_MS_I_Item.set("onPlay", hdrhref )
-    ATV_LSS_MS_I_Item.set("onSelect", hdrhref )
     ATV_LSS_MS_I_ItemLabel = etree.SubElement(ATV_LSS_MS_I_Item, 'label')
     ATV_LSS_MS_I_ItemLabel.text = label
     ATV_LSS_MS_I_ItemImg = etree.SubElement(ATV_LSS_MS_I_Item, 'image')
@@ -454,7 +450,7 @@ def makeTopMenu():
     ATV_LSS_MS_I_ItemKP_x.text = "This should be a grid or shelf??"
     ATV_LSS_MS_I_ItemKP_x = etree.SubElement(ATV_LSS_MS_I_ItemKP, 'image')
 #    ATV_LSS_MS_I_ItemKP_x = etree.SubElement(ATV_LSS_MS_I_ItemKP, 'link')
-##    ATV_LSS_MS_I_ItemKP_x.text = href
+    ATV_LSS_MS_I_ItemKP_x.text = "http://" + stv_cnct_ip + "/thumbnails/media.png"
 
     #
     # Add "Media Search" entry.... Have this display a search??!
@@ -2526,7 +2522,22 @@ def makeExample(path):
     # searchResults
     # listScrollerSplit
 
-def getTrailers(path, bin):
+#def getTrailersMenu():
+#
+# Main drop down
+#
+#http://trailers.apple.com/appletv/index.xml
+#https://trailers.apple.com/appletv/browse.xml
+#https://trailers.apple.com/appletv/genres/am/index.xml
+#https://trailers.apple.com/appletv/genres/nz/index.xml
+#
+#    grid
+#    browse
+#    Showtimes
+#    search
+
+
+def getTrailers(path, bin, headers):
     dprint(__name__, 1, "====== getTrailers ======: {0}", path )
     #
     # Call out to Apple, get the appropriate page, return it
@@ -2537,7 +2548,12 @@ def getTrailers(path, bin):
 
     # https://trailers.apple.com/trailers/independent/freebirds/images/poster-xlarge.jpg
 
-    r = requests.get( "http://trailers.apple.com" + path )
+
+    #User-Agent: iTunes-AppleTV/5.3 (2; 8GB; dt:11)
+#    headers = {'User-Agent': 'iTunes-AppleTV/5.3 (2; 8GB; dt:11)'}
+
+
+    r = requests.get( "http://trailers.apple.com" + path , headers=headers )
     
     if int(r.status_code) == 200:
         dprint(__name__, 2, "code 200")
@@ -2550,6 +2566,7 @@ def getTrailers(path, bin):
         if bin == "True":
             return r.content
         else:
+#            print r.text.encode('utf-8')
             return r.text.encode('utf-8')
 
     elif ( int(r.status_code) == 301 ) or ( int(r.status_code) == 302 ):
@@ -2571,7 +2588,7 @@ def getTrailers(path, bin):
     # - select XML template
     # - translate to aTV XML
     """
-def XML_STV2aTV(address, path, options):
+def XML_STV2aTV(address, path, options, headers):
     
     # OnScreen tree ends up as
     #    Top menu
@@ -2667,10 +2684,10 @@ def XML_STV2aTV(address, path, options):
     # https://trailers.apple.com/trailers/independent/freebirds/images/poster-xlarge.jpg
     # Make and return a list of all recorded shows
     elif path.startswith("/appletv/"):
-        return getTrailers(path, "false")
+        return getTrailers(path, "false", headers)
 
     elif path.startswith("/trailers/"):
-        return getTrailers(path, "false")
+        return getTrailers(path, "false", headers)
 
     # Generate an error
     return XML_Error('SageTV Connect', 'Unable to handle request, please try again.')
