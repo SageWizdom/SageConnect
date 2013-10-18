@@ -46,6 +46,7 @@ import time, uuid, hmac, hashlib, base64
 from urllib import urlencode
 from urlparse import urlparse
 from urllib import quote_plus
+from urllib import unquote_plus
 
 import Settings, ATVSettings
 #import PlexAPI
@@ -86,12 +87,12 @@ def indent(elem, level=0):
             elem.tail = i
 
 def XML_prettyprint(XML):
-    indent(XML.getroot())
+    indent(XML)
     XML.write(sys.stdout)
 
 def XML_prettystring(XML):
-    indent(XML.getroot())
-    return(etree.tostring(XML.getroot()))
+    indent(XML)
+    return(etree.tostring(XML))
 
 
 
@@ -286,6 +287,8 @@ def getXML(textURL):
         dprint(__name__, 2, "error: {0}", error )
         return FALSE
 
+
+
 '''
 
  This function creates the top level "trailers" menu.
@@ -295,6 +298,10 @@ def getXML(textURL):
 def makeTopMenu():
     dprint(__name__, 1, "====== makeTopMenu ======" )
     InitCfg()
+
+    # Get the IP of the SageTV Server
+    if g_param['CSettings'].getSetting('ip_sagetv')<>'':
+        sagetv_ip = g_param['CSettings'].getSetting('ip_sagetv')
 
     # Get the IP of the SageTV Connect Server
     # -- hopefully this is the same server soon
@@ -308,68 +315,258 @@ def makeTopMenu():
     ATVRoot = etree.Element("atv")
     ATVHead = etree.SubElement(ATVRoot, 'head')
     ATVtemp = etree.SubElement(ATVHead, 'script')
-    ATVtemp.set('src',"https://" + stv_cnct_ip + "/home/tv/PlexConnect/assets/js/utils.js")
-    ATVtemp = etree.SubElement(ATVHead, 'script')
-    ATVtemp.set('src',"https://" + stv_cnct_ip + "/home/tv/PlexConnect/assets/js/settings.js")
+    ATVtemp.set('src',"http://" + stv_cnct_ip + "/home/tv/PlexConnect/assets/js/utils.js")
 
 
     #	<body>
-    #		<listWithPreview id="com.sample.list-scroller-split">
-    #			<header>
-    #				<simpleHeader>
-    #					<title>Shows by Name</title>
-    #					<subtitle>List all shows by their names</subtitle>
-    #				</simpleHeader>
-    #			</header>
+    #		<listScrollerSplit id="com.sample.list-scroller-split">
     ATVBody = etree.SubElement(ATVRoot, 'body')
 
-    # list on left, header in middle
-#    ATVListWPreview = etree.SubElement(ATVBody, 'listScrollerSplit')
-    # List on right, header on right (centered over list)
-    #    ATVListWPreview = etree.SubElement(ATVBody, 'listWithPreview')
-#ATVListWPreview = etree.SubElement(ATVBody, 'scroller') # does not work in this config
-    ATVListWPreview = etree.SubElement(ATVBody, 'optionDialog') # Centered and Centered!
-    ATVListWPreview.set('id', "com.sample.movie-grid")
-#    ATVListWPreview.set('volatile', "true")
-#    ATVListWPreview.set('onVolatileReload', "atv.loadAndSwapURL('http://" + stv_cnct_ip  + "/SageConnect.xml')")
+#    ATVLSS = etree.SubElement(ATVBody, 'optionDialog') # Centered and Centered!
+#    ATVLSS.set('id', "com.sample.movie-grid")
 
-    ATV_LSS_Header = etree.SubElement(ATVListWPreview, 'header')
-    ATV_LSS_SimpleHeader = etree.SubElement(ATV_LSS_Header, 'simpleHeader')
-    ATV_LSS_SH_Title = etree.SubElement(ATV_LSS_SimpleHeader, 'title')
-    ATV_LSS_SH_Title.text = "SageTV Connect"
-    ATV_LSS_SH_Title = etree.SubElement(ATV_LSS_SimpleHeader, 'subtitle')
-    ATV_LSS_SH_Title.text = "Available Media"
 
-#    ATV_LSS_Desc = etree.SubElement(ATVListWPreview, 'description')
-#    ATV_LSS_Desc.text = "This is the description field"
+    ATVLSS = etree.SubElement(ATVBody, 'listScrollerSplit') # Centered and Centered!
+    ATVLSS.set('id', "com.menu.Main.list-scroller-split")
+##    ATVListWPreview.set('volatile', "true")
+##    ATVListWPreview.set('onVolatileReload', "atv.loadAndSwapURL('http://" + stv_cnct_ip  + "/SageConnect.xml')")
 
 
     #        <menu>
     #            <sections>
     #                <menuSection>
-    ATV_LSS_Menu = etree.SubElement(ATVListWPreview, 'menu')
+    #                   <items>
+    ATV_LSS_Menu = etree.SubElement(ATVLSS, 'menu')
     ATV_LSS_Sections = etree.SubElement(ATV_LSS_Menu, 'sections')
     ATV_LSS_MenuSections = etree.SubElement(ATV_LSS_Sections, 'menuSection')
 
 
-    #        <items>
     ATV_LSS_MS_Items = etree.SubElement(ATV_LSS_MenuSections, 'items')
 
-    href = "atv.loadURL('http://" + stv_cnct_ip + "/recordedShows.xml')"
+    # Repeat for each item in the list
+    #<items>
+    #    <twoLineEnhancedMenuItem id="1a"
+    #        onPlay="atv.loadURL('http://SageConnect.Server/exampleLayouts=scroller.xml')"
+    #        onSelect="atv.loadURL('http://SageConnect.Server/exampleLayouts=scroller.xml')">
+    #        <label>TV</label>
+    #        <label2>Recorded Television</label2>
+    #        <image>http://SageConnect.Server/thumbnails/TvIcon.png</image>
+    #        <!--<defaultImage>resource://Poster.png</defaultImage>-->
+    #        <preview>
+    #            <keyedPreview>
+    #                <title>Recorded Television</title>
+    #                <summary>27 Shows (285 Recordings)</summary>
+    #                <image>http://SageConnect.Server/thumbnails/SageTVLogo.jpg</image>
+    #            </keyedPreview>
+    #        </preview>
+    #    </twoLineEnhancedMenuItem>
+    #</items>
+
+
+    #
+    # Add Generic SageTV item.... use this to show current status
+    #
+    href = "http://" + stv_cnct_ip + "/recordedShows.xml"
+    hdrhref = "atv.loadURL('" + href + "')"
+    label = "SageTV"
+    ATV_LSS_MS_I_Item = etree.SubElement(ATV_LSS_MS_Items, 'twoLineEnhancedMenuItem')
+    ATV_LSS_MS_I_Item.set("id", label )
+    ATV_LSS_MS_I_Item.set("onPlay", hdrhref )
+    ATV_LSS_MS_I_Item.set("onSelect", hdrhref )
+    ATV_LSS_MS_I_ItemLabel = etree.SubElement(ATV_LSS_MS_I_Item, 'label')
+    ATV_LSS_MS_I_ItemLabel.text = label
+    ATV_LSS_MS_I_ItemImg = etree.SubElement(ATV_LSS_MS_I_Item, 'image')
+    ATV_LSS_MS_I_ItemImg.text = "http://" + stv_cnct_ip + "/thumbnails/Ball.png"
+    ATV_LSS_MS_I_ItemPrev = etree.SubElement(ATV_LSS_MS_I_Item, 'preview')
+    ATV_LSS_MS_I_ItemKP = etree.SubElement(ATV_LSS_MS_I_ItemPrev, 'keyedPreview')
+    ATV_LSS_MS_I_ItemKP_x = etree.SubElement(ATV_LSS_MS_I_ItemKP, 'title')
+    ATV_LSS_MS_I_ItemKP_x.text = "SageTV System Status"
+    ATV_LSS_MS_I_ItemKP_x = etree.SubElement(ATV_LSS_MS_I_ItemKP, 'summary')
+    ATV_LSS_MS_I_ItemKP_x.text = "This is currently a placeholder to show overall system status"
+    # The image tag is required, but can be empty
+    ATV_LSS_MS_I_ItemKP_x = etree.SubElement(ATV_LSS_MS_I_ItemKP, 'image')
+    ATV_LSS_MS_I_ItemKP_x.text = "http://" + stv_cnct_ip + "/thumbnails/SageTVLogo.jpg"
+
+    ATV_LSS_MS_I_ItemKP_x = etree.SubElement(ATV_LSS_MS_I_ItemKP, 'metadataKeys')
+    ATV_LSS_MS_I_ItemKP_xy = etree.SubElement(ATV_LSS_MS_I_ItemKP_x, 'label')
+    ATV_LSS_MS_I_ItemKP_xy.text = "Sage Version"
+    ATV_LSS_MS_I_ItemKP_xy = etree.SubElement(ATV_LSS_MS_I_ItemKP_x, 'label')
+    ATV_LSS_MS_I_ItemKP_xy.text = "Available Storage"
+    ATV_LSS_MS_I_ItemKP_xy = etree.SubElement(ATV_LSS_MS_I_ItemKP_x, 'label')
+    ATV_LSS_MS_I_ItemKP_xy.text = "Something?"
+    ATV_LSS_MS_I_ItemKP_xy = etree.SubElement(ATV_LSS_MS_I_ItemKP_x, 'label')
+    ATV_LSS_MS_I_ItemKP_xy.text = "Something else"
+
+    ATV_LSS_MS_I_ItemKP_x = etree.SubElement(ATV_LSS_MS_I_ItemKP, 'metadataValues')
+    ATV_LSS_MS_I_ItemKP_xy = etree.SubElement(ATV_LSS_MS_I_ItemKP_x, 'label')
+    ATV_LSS_MS_I_ItemKP_xy.text = "0.2"
+    ATV_LSS_MS_I_ItemKP_xy = etree.SubElement(ATV_LSS_MS_I_ItemKP_x, 'label')
+    ATV_LSS_MS_I_ItemKP_xy.text = "128 of 2.5"
+    ATV_LSS_MS_I_ItemKP_xy = etree.SubElement(ATV_LSS_MS_I_ItemKP_x, 'label')
+    ATV_LSS_MS_I_ItemKP_xy.text = "SageConnect"
+    ATV_LSS_MS_I_ItemKP_xy = etree.SubElement(ATV_LSS_MS_I_ItemKP_x, 'label')
+    ATV_LSS_MS_I_ItemKP_xy.text = "Stuff"
+
+
+
+    #
+    # Add "Recorded Shows" entry.... Have this display a grid!
+    #
+    href = "http://" + stv_cnct_ip + "/recordedGrid.xml"
+    hdrhref = "atv.loadURL('" + href + "')"
     label = "Recorded Shows"
-    ATV_LSS_MS_MenuItem = etree.SubElement(ATV_LSS_MS_Items, 'oneLineMenuItem')
-    ATV_LSS_MS_MenuItem.set("id", "list_1" )
-    ATV_LSS_MS_MenuItem.set("onSelect", href )
-    ATV_LSS_MS_MenuItemLabel = etree.SubElement(ATV_LSS_MS_MenuItem, 'label')
-    ATV_LSS_MS_MenuItemLabel.text = label
-    ATV_LSS_MS_MenuItemAcc = etree.SubElement(ATV_LSS_MS_MenuItem, 'accessories')
-    etree.SubElement(ATV_LSS_MS_MenuItemAcc, 'arrow')
+    ATV_LSS_MS_I_Item = etree.SubElement(ATV_LSS_MS_Items, 'twoLineEnhancedMenuItem')
+    ATV_LSS_MS_I_Item.set("id", label )
+    ATV_LSS_MS_I_Item.set("onPlay", hdrhref )
+    ATV_LSS_MS_I_Item.set("onSelect", hdrhref )
+    ATV_LSS_MS_I_ItemLabel = etree.SubElement(ATV_LSS_MS_I_Item, 'label')
+    ATV_LSS_MS_I_ItemLabel.text = label
+    ATV_LSS_MS_I_ItemImg = etree.SubElement(ATV_LSS_MS_I_Item, 'image')
+    ATV_LSS_MS_I_ItemImg.text = "http://" + stv_cnct_ip + "/thumbnails/recorded.png"
+    ATV_LSS_MS_I_ItemPrev = etree.SubElement(ATV_LSS_MS_I_Item, 'preview')
+    ATV_LSS_MS_I_ItemKP_x = etree.SubElement(ATV_LSS_MS_I_ItemPrev, 'link')
+    ATV_LSS_MS_I_ItemKP_x.text = href + "=Preview"
 
 
-    href = "atv.loadURL('http://" + stv_cnct_ip + "/mediaPath.xml=')"
+
+
+#    href = "atv.loadURL('http://" + stv_cnct_ip + "/recordedShows.xml')"
+#    label = "Recorded Shows List"
+#    ATV_LSS_MS_MenuItem = etree.SubElement(ATV_LSS_MS_Items, 'oneLineMenuItem')
+#    ATV_LSS_MS_MenuItem.set("id", "list_1" )
+#    ATV_LSS_MS_MenuItem.set("onSelect", href )
+#    ATV_LSS_MS_MenuItemLabel = etree.SubElement(ATV_LSS_MS_MenuItem, 'label')
+#    ATV_LSS_MS_MenuItemLabel.text = label
+#    ATV_LSS_MS_MenuItemAcc = etree.SubElement(ATV_LSS_MS_MenuItem, 'accessories')
+#    etree.SubElement(ATV_LSS_MS_MenuItemAcc, 'arrow')
+
+#    href = "atv.loadURL('http://" + stv_cnct_ip + "/recordedGrid.xml')"
+#    label = "Recorded Shows Grid"
+#    ATV_LSS_MS_MenuItem = etree.SubElement(ATV_LSS_MS_Items, 'oneLineMenuItem')
+#    ATV_LSS_MS_MenuItem.set("id", "list_2" )
+#    ATV_LSS_MS_MenuItem.set("onSelect", href )
+#    ATV_LSS_MS_MenuItemLabel = etree.SubElement(ATV_LSS_MS_MenuItem, 'label')
+#    ATV_LSS_MS_MenuItemLabel.text = label
+#    ATV_LSS_MS_MenuItemAcc = etree.SubElement(ATV_LSS_MS_MenuItem, 'accessories')
+#    etree.SubElement(ATV_LSS_MS_MenuItemAcc, 'arrow')
+
+
+    #
+    # Add "Media Library" entry.... Have this display a grid!
+    #
+    href = "http://" + stv_cnct_ip + "/mediaPath.xml="
+    hdrhref = "atv.loadURL('" + href + "')"
     label = "Media Library"
+    ATV_LSS_MS_I_Item = etree.SubElement(ATV_LSS_MS_Items, 'twoLineEnhancedMenuItem')
+    ATV_LSS_MS_I_Item.set("id", label )
+    ATV_LSS_MS_I_Item.set("onPlay", hdrhref )
+    ATV_LSS_MS_I_Item.set("onSelect", hdrhref )
+    ATV_LSS_MS_I_ItemLabel = etree.SubElement(ATV_LSS_MS_I_Item, 'label')
+    ATV_LSS_MS_I_ItemLabel.text = label
+    ATV_LSS_MS_I_ItemImg = etree.SubElement(ATV_LSS_MS_I_Item, 'image')
+    ATV_LSS_MS_I_ItemImg.text = "http://" + stv_cnct_ip + "/thumbnails/media.png"
+    ATV_LSS_MS_I_ItemPrev = etree.SubElement(ATV_LSS_MS_I_Item, 'preview')
+    ATV_LSS_MS_I_ItemKP = etree.SubElement(ATV_LSS_MS_I_ItemPrev, 'keyedPreview')
+    ATV_LSS_MS_I_ItemKP_x = etree.SubElement(ATV_LSS_MS_I_ItemKP, 'title')
+    ATV_LSS_MS_I_ItemKP_x.text = label
+    ATV_LSS_MS_I_ItemKP_x = etree.SubElement(ATV_LSS_MS_I_ItemKP, 'summary')
+    ATV_LSS_MS_I_ItemKP_x.text = "This should be a grid or shelf??"
+    ATV_LSS_MS_I_ItemKP_x = etree.SubElement(ATV_LSS_MS_I_ItemKP, 'image')
+#    ATV_LSS_MS_I_ItemKP_x = etree.SubElement(ATV_LSS_MS_I_ItemKP, 'link')
+##    ATV_LSS_MS_I_ItemKP_x.text = href
+
+#    href = "atv.loadURL('http://" + stv_cnct_ip + "/mediaPath.xml=')"
+#    label = "Media Library"
+#    ATV_LSS_MS_MenuItem = etree.SubElement(ATV_LSS_MS_Items, 'oneLineMenuItem')
+#    ATV_LSS_MS_MenuItem.set("id", "list_3" )
+#    ATV_LSS_MS_MenuItem.set("onSelect", href )
+#    ATV_LSS_MS_MenuItemLabel = etree.SubElement(ATV_LSS_MS_MenuItem, 'label')
+#    ATV_LSS_MS_MenuItemLabel.text = label
+#    ATV_LSS_MS_MenuItemAcc = etree.SubElement(ATV_LSS_MS_MenuItem, 'accessories')
+#    etree.SubElement(ATV_LSS_MS_MenuItemAcc, 'arrow')
+
+
+    #
+    # Add "Media Search" entry.... Have this display a search??!
+    #
+    href = "http://" + stv_cnct_ip + "/mediaSearch?"
+    hdrhref = "atv.loadURL('" + href + "')"
+    label = "Media Search"
+    ATV_LSS_MS_I_Item = etree.SubElement(ATV_LSS_MS_Items, 'twoLineEnhancedMenuItem')
+    ATV_LSS_MS_I_Item.set("id", label )
+    ATV_LSS_MS_I_Item.set("onPlay", hdrhref )
+    ATV_LSS_MS_I_Item.set("onSelect", hdrhref )
+    ATV_LSS_MS_I_ItemLabel = etree.SubElement(ATV_LSS_MS_I_Item, 'label')
+    ATV_LSS_MS_I_ItemLabel.text = label
+    ATV_LSS_MS_I_ItemImg = etree.SubElement(ATV_LSS_MS_I_Item, 'image')
+    ATV_LSS_MS_I_ItemImg.text = "http://" + stv_cnct_ip + "/thumbnails/search.png"
+    ATV_LSS_MS_I_ItemPrev = etree.SubElement(ATV_LSS_MS_I_Item, 'preview')
+    ATV_LSS_MS_I_ItemKP = etree.SubElement(ATV_LSS_MS_I_ItemPrev, 'keyedPreview')
+    ATV_LSS_MS_I_ItemKP_x = etree.SubElement(ATV_LSS_MS_I_ItemKP, 'title')
+    ATV_LSS_MS_I_ItemKP_x.text = "Imported Media Title Search"
+    ATV_LSS_MS_I_ItemKP_x = etree.SubElement(ATV_LSS_MS_I_ItemKP, 'summary')
+    ATV_LSS_MS_I_ItemKP_x.text = "You can use this to seach across all imported media"
+    ATV_LSS_MS_I_ItemKP_x = etree.SubElement(ATV_LSS_MS_I_ItemKP, 'image')
+    ATV_LSS_MS_I_ItemKP_x.text = "http://" + stv_cnct_ip + "/thumbnails/search.png"
+
+    ATV_LSS_MS_I_ItemKP_x = etree.SubElement(ATV_LSS_MS_I_ItemKP, 'metadataKeys')
+    ATV_LSS_MS_I_ItemKP_xy = etree.SubElement(ATV_LSS_MS_I_ItemKP_x, 'label')
+    ATV_LSS_MS_I_ItemKP_xy.text = "Version"
+    ATV_LSS_MS_I_ItemKP_xy = etree.SubElement(ATV_LSS_MS_I_ItemKP_x, 'label')
+    ATV_LSS_MS_I_ItemKP_xy.text = "Authors"
+    ATV_LSS_MS_I_ItemKP_xy = etree.SubElement(ATV_LSS_MS_I_ItemKP_x, 'label')
+    ATV_LSS_MS_I_ItemKP_xy.text = "Homepage"
+    ATV_LSS_MS_I_ItemKP_xy = etree.SubElement(ATV_LSS_MS_I_ItemKP_x, 'label')
+    ATV_LSS_MS_I_ItemKP_xy.text = "Forum"
+
+    ATV_LSS_MS_I_ItemKP_x = etree.SubElement(ATV_LSS_MS_I_ItemKP, 'metadataValues')
+    ATV_LSS_MS_I_ItemKP_xy = etree.SubElement(ATV_LSS_MS_I_ItemKP_x, 'label')
+    ATV_LSS_MS_I_ItemKP_xy.text = "0.2"
+    ATV_LSS_MS_I_ItemKP_xy = etree.SubElement(ATV_LSS_MS_I_ItemKP_x, 'label')
+    ATV_LSS_MS_I_ItemKP_xy.text = "Me!"
+    ATV_LSS_MS_I_ItemKP_xy = etree.SubElement(ATV_LSS_MS_I_ItemKP_x, 'label')
+    ATV_LSS_MS_I_ItemKP_xy.text = "SageConnect"
+    ATV_LSS_MS_I_ItemKP_xy = etree.SubElement(ATV_LSS_MS_I_ItemKP_x, 'label')
+    ATV_LSS_MS_I_ItemKP_xy.text = "Stuff"
+
+#    ATV_LSS_MS_I_ItemKP_x = etree.SubElement(ATV_LSS_MS_I_ItemPrev, 'link')
+#    ATV_LSS_MS_I_ItemKP_x.text = href
+
+
+#    href = "atv.loadURL('http://" + stv_cnct_ip + "/mediaSearch?')"
+#    label = "Title Search"
+#    ATV_LSS_MS_MenuItem = etree.SubElement(ATV_LSS_MS_Items, 'oneLineMenuItem')
+#    ATV_LSS_MS_MenuItem.set("id", "list_4" )
+#    ATV_LSS_MS_MenuItem.set("onSelect", href )
+#    ATV_LSS_MS_MenuItemLabel = etree.SubElement(ATV_LSS_MS_MenuItem, 'label')
+#    ATV_LSS_MS_MenuItemLabel.text = label
+#    ATV_LSS_MS_MenuItemAcc = etree.SubElement(ATV_LSS_MS_MenuItem, 'accessories')
+#    etree.SubElement(ATV_LSS_MS_MenuItemAcc, 'arrow')
+
+
+    ATV_LSS_MenuSections = etree.SubElement(ATV_LSS_Sections, 'menuSection')
+    ATV_LSS_MS_Items = etree.SubElement(ATV_LSS_MenuSections, 'header')
+    ATV_LSS_MS_Itemx = etree.SubElement(ATV_LSS_MS_Items, 'horizontalDivider')
+    ATV_LSS_MS_Itemx.set('alignment','left')
+    ATV_LSS_MS_Itemx = etree.SubElement(ATV_LSS_MS_Itemx, 'title')
+#        <horizontalDivider alignment="left">
+#            <title>{{TEXT(Video)}}</title>
+#        </horizontalDivider>
+
+
+#<header>
+#    <textDivider alignment="left">
+#        <title>Options</title>
+#    </textDivider>
+
+
+    ATV_LSS_MS_Items = etree.SubElement(ATV_LSS_MenuSections, 'items')
+
+
+    href = "atv.loadURL('http://trailers.apple.com/appletv/index.xml')"
+    label = "Trailers"
     ATV_LSS_MS_MenuItem = etree.SubElement(ATV_LSS_MS_Items, 'oneLineMenuItem')
-    ATV_LSS_MS_MenuItem.set("id", "list_2" )
+    ATV_LSS_MS_MenuItem.set("id", "list_7" )
     ATV_LSS_MS_MenuItem.set("onSelect", href )
     ATV_LSS_MS_MenuItemLabel = etree.SubElement(ATV_LSS_MS_MenuItem, 'label')
     ATV_LSS_MS_MenuItemLabel.text = label
@@ -377,6 +574,19 @@ def makeTopMenu():
     etree.SubElement(ATV_LSS_MS_MenuItemAcc, 'arrow')
 
 
+
+    href = "atv.loadURL('http://" + stv_cnct_ip + "/exampleLayouts=')"
+    label = "Layout Examples"
+    ATV_LSS_MS_MenuItem = etree.SubElement(ATV_LSS_MS_Items, 'oneLineMenuItem')
+    ATV_LSS_MS_MenuItem.set("id", "list_5" )
+    ATV_LSS_MS_MenuItem.set("onSelect", href )
+    ATV_LSS_MS_MenuItemLabel = etree.SubElement(ATV_LSS_MS_MenuItem, 'label')
+    ATV_LSS_MS_MenuItemLabel.text = label
+    ATV_LSS_MS_MenuItemAcc = etree.SubElement(ATV_LSS_MS_MenuItem, 'accessories')
+    etree.SubElement(ATV_LSS_MS_MenuItemAcc, 'arrow')
+
+
+#    print XML_prettystring(ATVRoot)
     return ATVRoot
 
 '''
@@ -549,7 +759,7 @@ def makeRecordedShowList():
                     # Grab the "title=abcdefg" text and remove the begining tag
                     href = href[href.index("title="):]
                     href = href[href.index("=") + 1 :]
-                    href = href.replace(' ', '*')
+                    href = href.replace(' ', '+')
                     href = href.replace('\'', '&apos;')
 
                     # make sure there are no spaces in the href
@@ -585,16 +795,14 @@ def makeRecordedShowList():
                     #
                     # http://sagetv.server/sagem/MediaFileThumbnail?series=Extreme+Homes
                     #
-                    ATV_LSS_MS_MI_P_CFP_I.text = stv_address + "/sagem/MediaFileThumbnail?series=" + href[href.rfind('='):]
+                    ATV_LSS_MS_MI_P_CFP_I.text = stv_address + "/sagex/media/poster/" + href[href.rfind('='):]
 
     return ATVRoot
 
 #
-# this is a currently unused attempt to create
-# a grid layout of titles
-# it doesn't currently work
+# Create a grid layout of recorded titles
 #
-def makeTitleGrid():
+def makeTitleGrid(path):
     dprint(__name__, 1, "====== makeTitleGrid ======" )
     InitCfg()
 
@@ -636,15 +844,25 @@ def makeTitleGrid():
     #				</simpleHeader>
     #			</header>
     ATVBody = etree.SubElement(ATVRoot, 'body')
-    ATVScroller = etree.SubElement(ATVBody, 'scroller')
+    if path.find('Preview') > 0:
+        ATVprv = etree.SubElement(ATVBody, 'preview')
+        ATVScroller = etree.SubElement(ATVprv, 'scrollerPreview')
+    else:
+        ATVScroller = etree.SubElement(ATVBody, 'scroller')
+
     ATVScroller.set('id', "com.sample.show-grid")
-    ATVScroller.set('volatile', "true")
-    ATVScroller.set('onVolatileReload', "atv.loadAndSwapURL(http://" + stv_cnct_ip + "/SageConnect.xml)")
-    
+#    ATVScroller.set('volatile', "true")
+#    ATVScroller.set('onVolatileReload', "atv.loadAndSwapURL(http://" + stv_cnct_ip + "/SageConnect.xml)")
+
     ATV_S_Header = etree.SubElement(ATVScroller, 'header')
-    ATV_S_SimpleHeader = etree.SubElement(ATV_S_Header, 'simpleHeader')
+
+    if path.find('Preview') > 0:
+        ATV_S_SimpleHeader = etree.SubElement(ATV_S_Header, 'metadataHeader')
+    else:
+        ATV_S_SimpleHeader = etree.SubElement(ATV_S_Header, 'simpleHeader')
+
     ATV_S_SH_Title = etree.SubElement(ATV_S_SimpleHeader, 'title')
-    ATV_S_SH_Title.text = "Recordings"
+    ATV_S_SH_Title.text = "SageTV Recordings"
     ATV_S_SH_Title = etree.SubElement(ATV_S_SimpleHeader, 'subtitle')
     ATV_S_SH_Title.text = "All Available Shows"
     
@@ -655,19 +873,23 @@ def makeTitleGrid():
     #        <items>
     ATV_S_Items = etree.SubElement(ATVScroller, 'items')
     ATV_S_I_Grid = etree.SubElement(ATV_S_Items, 'grid')
-    ATV_S_I_Grid.set("columnCount","5")
+
+    if path.find('Preview') > 0:
+        ATV_S_I_Grid.set("columnCount","5")
+    else:
+        ATV_S_I_Grid.set("columnCount","7")
+
+
     ATV_S_I_Grid.set("id","grid_0")
     ATV_S_I_G_Items = etree.SubElement(ATV_S_I_Grid, 'items')
-    
 
     count = 0
     ShowList = etree.Element("root")
-    
-    
+
     #
     # Get the XML from the SageTV Server
     #
-    stv_address = sagetv_user + ":" + sagetv_pass + "@" + sagetv_ip
+    stv_address = username + ":" + password + "@" + sagetv_ip
     stv_address = "http://" + stv_address
     stv_path = "/sagem/m/recordings.jsp"
 
@@ -683,12 +905,17 @@ def makeTitleGrid():
             showlist = div.find('form')
             dprint(__name__, 2, "-----> <{0} method={1}>", showlist.tag, showlist.get('method') )
 
-
-
             for shows in showlist.findall('div'):
                 dprint(__name__, 2, "-------> <{0} class={1}>", shows.tag, shows.get('class') )
                 title = shows.find('div')
                 if title <> None:
+                    
+                    inputNode = title.find('input')
+                    if inputNode is not None:
+                        MediaId = inputNode.get('value')
+                        if MediaId.find(',') > 0:
+                            MediaId = MediaId[:MediaId.find(',')]
+
                     count = count + 1
                     dprint(__name__, 2, "----------> <{0} class={1}>", title.tag, title.get('class') )
                     thisshow = title.find('a')
@@ -698,6 +925,9 @@ def makeTitleGrid():
                     href = thisshow.get("href")
                     href = href[href.index("title="):]
                     href = href[href.index("=") + 1:]
+                    href = href.replace(' ', '+')
+                    href = href.replace('\'', '&apos;')
+
                     href = "atv.loadURL('http://" + stv_cnct_ip + "/title=" + href + "')"
                     dprint(__name__, 2, "---- href ---> {0}", href )
 
@@ -718,10 +948,10 @@ def makeTitleGrid():
                     ATV_S_I_G_I_mP = etree.SubElement(ATV_S_I_G_Items, 'moviePoster')
                     ATV_S_I_G_I_mP.set("id","item_" + str(count))
                     count = count + 1
-                    hdrTemp = "atv.sessionStorage['addrpms']='http://" + stv_cnct_ip + "';{{sendToATV(ratingKey:0:duration:0)}};" + href + "')"
-                    ATV_S_I_G_I_mP.set("onPlay",hdrTemp)
-                    ATV_S_I_G_I_mP.set("onSelect",hdrTemp)
-                    ATV_S_I_G_I_mP.set("onHoldSelect","scrobbleMenu('name', 'rating', 'http://" + stv_cnct_ip + ");" )
+                    hdrTemp = "atv.sessionStorage['addrpms']='" + stv_cnct_ip + "';" + href
+                    ATV_S_I_G_I_mP.set("onPlay",href)
+                    ATV_S_I_G_I_mP.set("onSelect",href)
+#                    ATV_S_I_G_I_mP.set("onHoldSelect","scrobbleMenu('name', 'rating', 'http://" + stv_cnct_ip + ");" )
 
 
                     ATV_S_I_G_I_mP_T = etree.SubElement(ATV_S_I_G_I_mP, 'title')
@@ -729,10 +959,13 @@ def makeTitleGrid():
 #                    ATV_S_I_G_I_mP_T = etree.SubElement(ATV_S_I_G_I_mP, 'subtitle')
 #                    ATV_S_I_G_I_mP_T.text = title
                     ATV_S_I_G_I_mP_T = etree.SubElement(ATV_S_I_G_I_mP, 'image')
-                    ATV_S_I_G_I_mP_T.text = stv_address + "/sagem/MediaFileThumbnail?series" + href[href.rfind('='):href.rfind('\'')]
-                    print "--> " + ATV_S_I_G_I_mP_T.text
+                    ATV_S_I_G_I_mP_T.text = stv_address + "/sagex/media/fanart?mediafile=" + MediaId + "&artifact=poster"
+#                    print "--> " + ATV_S_I_G_I_mP_T.text
                     ATV_S_I_G_I_mP_T = etree.SubElement(ATV_S_I_G_I_mP, 'defaultImage')
-                    ATV_S_I_G_I_mP_T.text = "resource://16X9.png"
+                    ATV_S_I_G_I_mP_T.text = "resource://Poster.png"
+#                    ATV_S_I_G_I_mP_T.text = "resource://16X9.png"
+
+#    print XML_prettystring(ATVRoot)
 
     return ATVRoot
 
@@ -768,104 +1001,59 @@ def makeShowList(atvTitle):
     dprint(__name__, 2, "--> {0}", textURL )
 
     #    http://sagetv.server/sagem/m/recordings.jsp?title=Cities+of+the+Underworld
-    
-    #<?xml version="1.0" encoding="UTF-8" ?>
+
+
     #<atv>
     #    <head>
     #        <script src="{{URL(:/js/utils.js)}}" />
-    #        <script src="{{URL(:/js/settings.js)}}" />
     #    </head>
     ATVRoot = etree.Element("atv")
     ATVHead = etree.SubElement(ATVRoot, 'head')
     ATVtemp = etree.SubElement(ATVHead, 'script')
-    ATVtemp.set('src',"https://" + stv_cnct_ip + "/home/tv/PlexConnect/assets/js/utils.js")
-    ATVtemp = etree.SubElement(ATVHead, 'script')
-    ATVtemp.set('src',"https://" + stv_cnct_ip + "/home/tv/PlexConnect/assets/js/settings.js")
-    
-    #	<body>
-    #		<listWithPreview id="com.sample.list-scroller-split">
-    #			<header>
-    #				<simpleHeader>
-    #					<title>Shows by Name</title>
-    #					<subtitle>List all shows by their names</subtitle>
-    #				</simpleHeader>
-    #			</header>
-    ATVBody = etree.SubElement(ATVRoot, 'body')
-    ATVListWPreview = etree.SubElement(ATVBody, 'optionDialog')
-    ATVListWPreview.set('id', "Show_List")
-    #
-    # The loadAndSwapURL needs to be the URL of this page.... not sure I have that?
-    #
-#    ATVScroller.set('volatile', "true")
-#    ATVScroller.set('onVolatileReload', "atv.loadAndSwapURL(http://" + stv_cnct_ip + "/SageConnect.xml)")
+    ATVtemp.set('src',"http://" + stv_cnct_ip + "/home/tv/PlexConnect/assets/js/utils.js")
 
-    ATV_LSS_Header = etree.SubElement(ATVListWPreview, 'header')
-    ATV_LSS_SimpleHeader = etree.SubElement(ATV_LSS_Header, 'simpleHeader')
-    ATV_LSS_SH_Title = etree.SubElement(ATV_LSS_SimpleHeader, 'title')
+
+    #	<body>
+    #		<listScrollerSplit id="com.sample.list-scroller-split">
+    ATVBody = etree.SubElement(ATVRoot, 'body')
+
+    #    ATVLSS = etree.SubElement(ATVBody, 'optionDialog') # Centered and Centered!
+    #    ATVLSS.set('id', "com.sample.movie-grid")
+
+
+    ATVLSS = etree.SubElement(ATVBody, 'listScrollerSplit') # Centered and Centered!
+    ATVLSS.set('id', "com.menu.Main.list-scroller-split")
+    ##    ATVListWPreview.set('volatile', "true")
+    ##    ATVListWPreview.set('onVolatileReload', "atv.loadAndSwapURL('http://" + stv_cnct_ip  + "/SageConnect.xml')")
+
+    #<header>
+    #    <simpleHeader>
+    #        <title>Movie Trailers</title>
+    #        <subtitle>SubTitle</subtitle>
+    #    </simpleHeader>
+    #</header>
+    ATV_LSS_M_H = etree.SubElement(ATVLSS, 'header')
+    ATV_LSS_M_H_sH = etree.SubElement(ATV_LSS_M_H, 'simpleHeader')
+    ATV_LSS_M_H_sH_t = etree.SubElement(ATV_LSS_M_H_sH, 'title')
     titleText = atvTitle[atvTitle.find('=')+1:]
     titleText = titleText.replace('+',' ')
-    ATV_LSS_SH_Title.text = titleText
-    ATV_LSS_SH_Title = etree.SubElement(ATV_LSS_SimpleHeader, 'subtitle')
-    ATV_LSS_SH_Title.text = "Current Episodes"
-    
-    
-    #    <preview>
-    #        <keyedPreview>
-    #            <title>&#x00AD;<!--soft-hyphen--></title>
-    #            <summary/>
-    #            <metadataKeys>
-    #                <label>{{TEXT(Version)}}</label>
-    #                <label>{{TEXT(Authors)}}</label>
-    #                <label>{{TEXT(Wiki/Docs)}}</label>
-    #                <label>{{TEXT(Homepage)}}</label>
-    #                <label>{{TEXT(Forum)}}</label>
-    #            </metadataKeys>
-    #            <metadataValues>
-    #                <label>Alpha</label>
-    #                <label>Baa, roidy</label>
-    #                <label>f00b4r</label>
-    #                <label>https://github.com/ibaa/plexconnect</label>
-    #                <label>http://forums.plexapp.com/index.php/forum/136-appletv-plexconnect/</label>
-    #            </metadataValues>
-    #            <image>{{URL(:/thumbnails/PlexConnectLogo.jpg)}}</image>
-    #        </keyedPreview>
-    #    </preview>
-    #
-    #    ATV_LSS_Header = etree.SubElement(ATVListWPreview, 'preview')
-    #    ATV_LSS_SimpleHeader = etree.SubElement(ATV_LSS_Header, 'keyedPreview')
-    #    ATV_LSS_SH_Title = etree.SubElement(ATV_LSS_SimpleHeader, 'title')
-    #    ATV_LSS_SH_Title.text = "&#x00AD;<!--soft-hyphen-->"
-    #    etree.SubElement(ATV_LSS_SimpleHeader, 'summary')
-    #    etree.SubElement(ATV_LSS_SimpleHeader, 'metadataKeys')
-    #    etree.SubElement(ATV_LSS_SimpleHeader, 'metadataValues')
-    #    ATV_LSS_SH_Image = etree.SubElement(ATV_LSS_SimpleHeader, 'image')
-    #    ATV_LSS_SH_Image.text = "http://sagetv.server/sagem/m/images/SageLogo256.png"
-    
-    
-    
+    titleText = unquote_plus(titleText)
+    ATV_LSS_M_H_sH_t.text = titleText
+#    ATV_LSS_M_H_sH_t = etree.SubElement(ATV_LSS_M_H_sH, 'subtitle')
+#    ATV_LSS_M_H_sH_t.text = "Current Episodes"
+
+
     #        <menu>
     #            <sections>
     #                <menuSection>
-    ATV_LSS_Menu = etree.SubElement(ATVListWPreview, 'menu')
+    #                   <items>
+    ATV_LSS_Menu = etree.SubElement(ATVLSS, 'menu')
     ATV_LSS_Sections = etree.SubElement(ATV_LSS_Menu, 'sections')
     ATV_LSS_MenuSections = etree.SubElement(ATV_LSS_Sections, 'menuSection')
-    
-    #    #        <header>
-    #    #            <textDivider alignment="center">
-    #    #                <title>Genres</title>
-    #    #            </textDivider>
-    #    #        </header>
-    #
-    #    ATV_LSS_MS_Header = etree.SubElement(ATV_LSS_MenuSections, 'header')
-    #    ATV_LSS_MS_H_TextDivider = etree.SubElement(ATV_LSS_MS_Header, 'textDivider')
-    #    ATV_LSS_MS_H_TextDivider.set('alignment','center')
-    #    ATV_LSS_MS_H_Title = etree.SubElement(ATV_LSS_MS_H_TextDivider, 'title')
-    #    ATV_LSS_MS_H_Title.text = "Shows"
-	
-    
-    #        <items>
+
+
     ATV_LSS_MS_Items = etree.SubElement(ATV_LSS_MenuSections, 'items')
-    
+
     count = 0
     
     ShowList = etree.Element("root")
@@ -931,7 +1119,20 @@ def makeShowList(atvTitle):
                             XML_Error('makeShowList()','Failed to find a valid MediaID')
 
                         href = "atv.loadURL('http://" + stv_cnct_ip + "/MediaId=" + href + "')"
+                        
+#                        ## delete this
+#                        href = "{var ev = ''; var out = [];for (ev in window){if (/^on/.test(ev)) {out[out.length] = ev;}}log(out.join(', '));};" + href
+
+                        
                         dprint(__name__, 2, "---- href ---> {0}", href )
+
+                        # Get the show name
+                        mediaId = title.find('input')
+                        if mediaId is not None:
+                            mediaId = mediaId.get('value')
+                        else:
+                            mediaId = ""
+
 
                         # Get the show name
                         showid = title.find('a')
@@ -950,17 +1151,20 @@ def makeShowList(atvTitle):
                             # this is the episode title
                             episodeTitle = eps.find('b').text
 
-                        if eps.text is not None and eps.text.find("\"")  > 0:
-                            # this is the episode description
-                            episodeDesc = eps.text
+                        if eps.text is not None:
+                            if eps.text.find(".") > 0:
+                                if eps.text.find("GB") < 0:
+                                    if eps.text.find("MB") < 0:
+                                        # this is the episode description
+                                        episodeDesc = eps.text
 
                         if eps.text is not None and eps.text.find(":") > 0:
                             # this is the original airing time
                             episodeDate = eps.text
                             # grab just the airing date (remove day and time)
-                            episodeDate = episodeDate[episodeDate.find(',') + 1:]
-                            episodeDate = episodeDate[:episodeDate.rfind(',')]
-                            episodeDate = episodeDate.strip()
+#                            episodeDate = episodeDate[episodeDate.find(',') + 1:]
+#                            episodeDate = episodeDate[:episodeDate.rfind(',')]
+#                            episodeDate = episodeDate.strip()
 
                         if eps.find('img') is not None:
                             # these are the images that tell view status
@@ -970,28 +1174,70 @@ def makeShowList(atvTitle):
                     # make sure that something is in the title even if its just the show name
                     if episodeTitle == "":
                         episodeTitle = showTitle
-                    
-                    # here is the part that repeats for each show
-                    #            <oneLineMenuItem id="list_1">
-                    #                <label>Action</label>
-                    #                <accessories>
-                    #                    <unplayedDot/>
-                    #                    <partiallyPlayedDot/>
-                    #                </accessories>
-                    #                <preview>
-                    #                    <crossFadePreview>
-                    #                        <image>http://sagetv.server/sagem/MediaFileThumbnail?series=Modern+Marvels</image>
-                    #                    </crossFadePreview>
-                    #                </preview>
-                    #            </twoLineMenuItem>
-                    ATV_LSS_MS_MenuItem = etree.SubElement(ATV_LSS_MS_Items, 'twoLineMenuItem')
-                    ATV_LSS_MS_MenuItem.set("id", "list_" + str(count) )
-                    ATV_LSS_MS_MenuItem.set("onSelect", href )
-                    ATV_LSS_MS_MenuItemLabel = etree.SubElement(ATV_LSS_MS_MenuItem, 'label')
-                    ATV_LSS_MS_MenuItemLabel.text = episodeDate + ": " + episodeTitle
-                    ATV_LSS_MS_MenuItemLabel = etree.SubElement(ATV_LSS_MS_MenuItem, 'label2')
-                    ATV_LSS_MS_MenuItemLabel.text = episodeDesc
 
+
+
+
+
+                    # Repeat for each item in the list
+                    #<items>
+                    #    <twoLineEnhancedMenuItem id="1a"
+                    #        onPlay="atv.loadURL('http://SageConnect.Server/exampleLayouts=scroller.xml')"
+                    #        onSelect="atv.loadURL('http://SageConnect.Server/exampleLayouts=scroller.xml')">
+                    #        <label>TV</label>
+                    #        <label2>Recorded Television</label2>
+                    #        <image>http://SageConnect.Server/thumbnails/TvIcon.png</image>
+                    #        <!--<defaultImage>resource://Poster.png</defaultImage>-->
+                    #        <preview>
+                    #            <keyedPreview>
+                    #                <title>Recorded Television</title>
+                    #                <summary>27 Shows (285 Recordings)</summary>
+                    #                <image>http://SageConnect.Server/thumbnails/SageTVLogo.jpg</image>
+                    #            </keyedPreview>
+                    #        </preview>
+                    #    </twoLineEnhancedMenuItem>
+                    #</items>
+
+
+                    #
+                    # Add Generic SageTV item.... use this to show current status
+                    #
+                    href = "http://" + stv_cnct_ip + "/recordedShows.xml"
+                    hdrhref = "atv.loadURL('" + href + "')"
+                    ATV_LSS_MS_I_Item = etree.SubElement(ATV_LSS_MS_Items, 'oneLineMenuItem')
+                    ATV_LSS_MS_I_Item.set("id", episodeTitle )
+                    ATV_LSS_MS_I_Item.set("onPlay", hdrhref )
+                    ATV_LSS_MS_I_Item.set("onSelect", hdrhref )
+                    ATV_LSS_MS_I_ItemLabel = etree.SubElement(ATV_LSS_MS_I_Item, 'label')
+                    ATV_LSS_MS_I_ItemLabel.text = episodeTitle
+#                    ATV_LSS_MS_I_ItemImg = etree.SubElement(ATV_LSS_MS_I_Item, 'image')
+##                    ATV_LSS_MS_I_ItemImg.text = "http://" + stv_cnct_ip + "/thumbnails/Ball.png"
+#                    ATV_LSS_MS_I_ItemImg = etree.SubElement(ATV_LSS_MS_I_Item, 'defaultImage')
+                    ATV_LSS_MS_I_ItemPrev = etree.SubElement(ATV_LSS_MS_I_Item, 'preview')
+                    ATV_LSS_MS_I_ItemKP = etree.SubElement(ATV_LSS_MS_I_ItemPrev, 'keyedPreview')
+                    ATV_LSS_MS_I_ItemKP_x = etree.SubElement(ATV_LSS_MS_I_ItemKP, 'title')
+                    ATV_LSS_MS_I_ItemKP_x.text = episodeTitle
+                    ATV_LSS_MS_I_ItemKP_x = etree.SubElement(ATV_LSS_MS_I_ItemKP, 'summary')
+                    if episodeDesc <> "":
+                        ATV_LSS_MS_I_ItemKP_x.text = episodeDesc
+
+                    # The image tag is required, but can be empty
+                    ATV_LSS_MS_I_ItemKP_x = etree.SubElement(ATV_LSS_MS_I_ItemKP, 'image')
+                    ATV_LSS_MS_I_ItemKP_x.text = "http://" + sagetv_ip + "/stream/MediaFileThumbnailServlet?MediaFileId=" + mediaId
+
+                    ATV_LSS_MS_I_ItemKP_x = etree.SubElement(ATV_LSS_MS_I_ItemKP, 'metadataKeys')
+                    ATV_LSS_MS_I_ItemKP_xy = etree.SubElement(ATV_LSS_MS_I_ItemKP_x, 'label')
+                    ATV_LSS_MS_I_ItemKP_xy.text = "Recorded"
+                    ATV_LSS_MS_I_ItemKP_xy = etree.SubElement(ATV_LSS_MS_I_ItemKP_x, 'label')
+                    ATV_LSS_MS_I_ItemKP_xy.text = "Duration"
+
+                    ATV_LSS_MS_I_ItemKP_x = etree.SubElement(ATV_LSS_MS_I_ItemKP, 'metadataValues')
+                    ATV_LSS_MS_I_ItemKP_xy = etree.SubElement(ATV_LSS_MS_I_ItemKP_x, 'label')
+                    ATV_LSS_MS_I_ItemKP_xy.text = episodeDate
+                    ATV_LSS_MS_I_ItemKP_xy = etree.SubElement(ATV_LSS_MS_I_ItemKP_x, 'label')
+                    ATV_LSS_MS_I_ItemKP_xy.text = "20 M"
+
+                        
     return ATVRoot
 
 
@@ -1206,7 +1452,8 @@ def makeMediaInfo(atvAiring):
 
 #    posterTmp = "http://" + username + ":" + password + "@" + sagetv_ip + textURL
     posterTmp = "http://" + username + ":" + password + "@" + sagetv_ip
-    ATV_ID_BigPoster.text = posterTmp + "/stream/MediaFileThumbnailServlet?MediaFileId=" + epMediaID
+#    ATV_ID_BigPoster.text = posterTmp + "/stream/MediaFileThumbnailServlet?MediaFileId=" + epMediaID
+    ATV_ID_BigPoster.text = posterTmp + "/sagex/media/poster/" + epMediaID
     ATV_ID_DefImage = etree.SubElement(ATVItemDetail, 'defaultImage')
     ATV_ID_DefImage.text = "resource://Poster.png"
 
@@ -1334,7 +1581,9 @@ def makeMediaInfo(atvAiring):
     #    </actionButton>
     ATV_ID_CS_S_S_SS_I_AB = etree.SubElement(ATV_ID_CS_S_S_SS_I, 'actionButton')
     ATV_ID_CS_S_S_SS_I_AB.set("id","play")
-    TempStr = "atv.sessionStorage['addrpms']='" + stv_cnct_ip + "';atv.loadURL('http://" + stv_cnct_ip + "/MediaFileId=" + epMediaID + "')"
+
+    TempStr = "atv.sessionStorage['addrpms']='" + stv_cnct_ip + "';atv.sessionStorage['sageDbId']=" + epMediaID + ";atv.loadURL('http://" + stv_cnct_ip + "/MediaFileId=" + epMediaID + "')"
+
     ATV_ID_CS_S_S_SS_I_AB.set("onSelect",TempStr)
     ATV_ID_CS_S_S_SS_I_AB.set("onPlay",TempStr)
     ATV_ID_CS_S_S_SS_I_AB_Title = etree.SubElement(ATV_ID_CS_S_S_SS_I_AB, 'title')
@@ -1536,8 +1785,22 @@ def makePlay(atvAiring):
     dprint(__name__, 2, "--> {0}", textURL )
 
     # "http://sagetv.server/stream/HTTPLiveStreamingPlaylist?MediaFileId=10960584"
-    
-    
+
+    time = "0"
+    # verify the bookmark dir exists
+    if os.path.exists("bookmarks"):
+        sageDbId = textURL[textURL.rfind("=")+1:]
+
+        # if the bookmark file
+        if os.path.isfile("bookmarks/" + sageDbId + ".bk"):
+
+            # if the file exists, read it
+            file = codecs.open("bookmarks/" + sageDbId + ".bk", "r", "utf-8")
+            time = file.read()
+            file.close()
+
+    print "time => [" + time + "]"
+
     #<atv>
     #    <body>
     #        <videoPlayer id="com.sample.video-player">
@@ -1563,12 +1826,12 @@ def makePlay(atvAiring):
     ATV_VP_hFVA_mU = etree.SubElement(ATV_VP_hFVA, 'description')
     ATV_VP_hFVA_mU.text = "desc"
 
-# FIX
-# resume not currently supported
-# resume from some position within the file stream
-# the number is seconds000  so 20 seconds would be "20000"
+    # Dont bother to resume if less than 1 second into video
+#    if int(time) > 1000:
+    # resume from some position within the file stream
+    # the number is seconds000  so 20 seconds would be "20000"
 #    ATV_VP_hFVA_mU = etree.SubElement(ATV_VP_hFVA, 'bookmarkTime')
-#    ATV_VP_hFVA_mU.text = "1438262"
+#    ATV_VP_hFVA_mU.text = "20000"
 
     ATV_VP_hFVA_mU = etree.SubElement(ATV_VP_hFVA, 'image')
     ATV_VP_hFVA_mU.text = ""
@@ -1589,6 +1852,16 @@ def makePlay(atvAiring):
     #        </videoPlayer>
     #    </body>
     #</atv>
+
+    ATV_VP_hFVA_mMd = etree.SubElement(ATV_VP_hFVA, 'myMetadata')
+    ATV_VP_hFVA_mMd_hfva = etree.SubElement(ATV_VP_hFVA_mMd, 'httpFileVideoAsset')
+    ATV_VP_hFVA_mMd_hfva.set('id','com.sample.video-player1')
+    ATV_VP_hFVA_mMd_hfva_tmp = etree.SubElement(ATV_VP_hFVA_mMd_hfva, 'mediaURL')
+    ATV_VP_hFVA_mMd_hfva_tmp.text = textURL
+    ATV_VP_hFVA_mMd_hfva_tmp = etree.SubElement(ATV_VP_hFVA_mMd_hfva, 'title')
+    ATV_VP_hFVA_mMd_hfva_tmp.text = "title"
+    ATV_VP_hFVA_mMd_hfva_tmp = etree.SubElement(ATV_VP_hFVA_mMd_hfva, 'description')
+    ATV_VP_hFVA_mMd_hfva_tmp.text = "description"
 
     return ATVRoot
 
@@ -1884,7 +2157,7 @@ def generatePathXML(path, myList):
         if path <> "":
             href = path + '/'
         href = href + myItem
-        href = href.replace(' ', '*')
+        href = href.replace(' ', '+')
         href = href.replace('\'', '&apos;')
 
         href = "atv.loadURL('http://" + stv_cnct_ip + "/mediaPath.xml=" + href + "')"
@@ -1934,14 +2207,8 @@ def makeDirList(path):
         # create it
         XML = makeDirTree()
 
-#        XML.write(filename)
         file = codecs.open(filename, "w", "utf-8")
-#        file.write()
-#        file.write(XML_prettystring(XML))
-        xmlstring = etree.tostring(XML)
-#        xmlstring = xmlstring.replace( '\'', '&apos;')
-
-        file.write(xmlstring)
+        file.write(XML_prettystring(XML))
         file.close()
 
     
@@ -1990,6 +2257,442 @@ def makeDirList(path):
     dprint(__name__, 0, "MakeDirList(): Failed to process path: {0}", path )
     return XML_Error("makeDirList", "Failed to process")
 
+
+#
+# Search all imported media & show titles for specific text?
+#
+#
+#
+def searchTitle():
+    dprint(__name__, 1, "====== searchTitle ======")
+    InitCfg()
+    
+    # Get the IP of the SageTV Connect Server
+    # -- hopefully this is the same server soon
+    if g_param['CSettings'].getSetting('ip_webserver')<>'':
+        stv_cnct_ip = g_param['CSettings'].getSetting('ip_webserver')
+    
+#    <atv>
+#        <body>
+#            <search id="plex-search">
+#                <header>
+#                    <simpleHeader>
+#                        <title>{{TEXT(Search Plex Library)}}</title>
+#                    </simpleHeader>
+#                </header>
+#                <baseURL>{{URL(:/search?type=4&amp;query=)}}</baseURL>
+#           </search>
+#       </body>
+#    </atv>
+    ATVRoot = etree.Element("atv")
+    ATVBody = etree.SubElement(ATVRoot, 'body')
+    ATVBody_S = etree.SubElement(ATVBody, 'search')
+    ATVBody_S.set('id',"sage-search")
+    ATVBody_S_h = etree.SubElement(ATVBody_S, 'header')
+    ATVBody_S_h_sH = etree.SubElement(ATVBody_S_h, 'simpleHeader')
+    ATVBody_S_h_sH_t = etree.SubElement(ATVBody_S_h_sH, 'title')
+    ATVBody_S_h_sH_t.text = "SageTV Title Search"
+    ATVBody_S_bU = etree.SubElement(ATVBody_S, 'baseURL')
+#    ATVBody_S_bU.text = "http://" + stv_cnct_ip + "/search?type=4&amp;query="
+    ATVBody_S_bU.text = "http://" + stv_cnct_ip + "/search?query="
+    return ATVRoot
+
+
+def searchMedia(path):
+    dprint(__name__, 1, "====== searchMedia ======: {0}", path)
+    InitCfg()
+    
+    # Get the IP of the SageTV Server
+    if g_param['CSettings'].getSetting('ip_sagetv')<>'':
+        sagetv_ip = g_param['CSettings'].getSetting('ip_sagetv')
+    
+    # Get the IP of the SageTV Connect Server
+    # -- hopefully this is the same server soon
+    if g_param['CSettings'].getSetting('ip_webserver')<>'':
+        stv_cnct_ip = g_param['CSettings'].getSetting('ip_webserver')
+    
+    if g_param['CSettings'].getSetting('sagetv_user')<>'':
+        username = g_param['CSettings'].getSetting('sagetv_user')
+    
+    if g_param['CSettings'].getSetting('sagetv_pass')<>'':
+        password = g_param['CSettings'].getSetting('sagetv_pass')
+
+    #<atv>
+    #    <head>
+    #        <script src="{{URL(:/js/utils.js)}}" />
+    #        <script src="{{URL(:/js/scrobble.js)}}" />
+    #    </head>
+
+    ATVRoot = etree.Element("atv")
+    ATVHead = etree.SubElement(ATVRoot, 'head')
+    ATVtemp = etree.SubElement(ATVHead, 'script')
+    ATVtemp.set('src',"https://" + stv_cnct_ip + "/home/tv/PlexConnect/assets/js/utils.js")
+    ATVtemp = etree.SubElement(ATVHead, 'script')
+    ATVtemp.set('src',"https://" + stv_cnct_ip + "/home/tv/PlexConnect/assets/js/scrobble.js")
+
+
+#        <body>
+#            <searchResults id="searchResults">
+#                <menu>
+#                    <sections>
+    ATVBody = etree.SubElement(ATVRoot, 'body')
+    ATVBody_sR = etree.SubElement(ATVBody, 'searchResults')
+    ATVBody_sR.set('id', 'searchResults')
+    ATVBody_sR_m = etree.SubElement(ATVBody_sR, 'menu')
+    ATVBody_sR_m_s = etree.SubElement(ATVBody_sR_m, 'sections')
+
+# can repeat with mutiple menuSections
+#    <menuSection>
+#        <header>
+#            <horizontalDivider alignment="left">
+#                <title>{{TEXT(Movies)}}</title>
+#            </horizontalDivider>
+#        </header>
+#        <items>{{VAR(cut:NoKey:CUT)}}  <!--this sets the var to CUT-->
+    ATVBody_sR_m_s_mS = etree.SubElement(ATVBody_sR_m_s, 'menuSection')
+    ATVBody_sR_m_s_mS_h = etree.SubElement(ATVBody_sR_m_s_mS, 'header')
+    ATVBody_sR_m_s_mS_h_hD = etree.SubElement(ATVBody_sR_m_s_mS_h, 'horizontalDivider')
+    ATVBody_sR_m_s_mS_h_hD.set('alignment', 'left')
+    ATVBody_sR_m_s_mS_h_hD_t = etree.SubElement(ATVBody_sR_m_s_mS_h_hD, 'title')
+    ATVBody_sR_m_s_mS_h_hD_t.text = "This is the section title"
+    ATVBody_sR_m_s_mS_i = etree.SubElement(ATVBody_sR_m_s_mS, 'items')
+
+    filename = 'dirList.xml'
+    file = open(filename, "r")
+
+# Only disply first 10 finds
+# For each line, grep to see if it has the text in it.....
+#   If count > 10, stop
+#
+#   If line contains text, put it in the file
+#   increment count
+#
+#
+
+    searchTmp = path[path.find('=')+1:]
+    print "st--> " + searchTmp
+    searchTmp = unquote_plus(searchTmp)
+    print "st--> " + searchTmp
+    searchTmp = searchTmp.lower()
+    print "st--> " + searchTmp
+
+    id = int(0)
+
+
+# if < max results
+# strip out the title
+# look for match
+# if yes, strip out ID
+# generate entry
+    for line in file:
+        # if more than 15 entries stop.
+        if id > 15:
+            break
+        
+        lineTmp = line[line.find("\"")+1:]
+        lineTmp = lineTmp[:lineTmp.find("\"")]
+        lineTmp2 = lineTmp.lower()
+        print "lt--> " + lineTmp
+
+        if lineTmp2.find(searchTmp) >= 0:
+            if lineTmp2.find("<") >= 0:
+                dbidTmp = ""
+                print "no quotes, ignore "
+                continue
+            elif lineTmp2.find(".") <= 0:
+                # I'm a dir... make my link to the build dir? thing
+                dbidTmp = ""
+                print "found dir, ignore "
+                continue
+            else:
+                # pull out the ID
+                # create an entry
+                dbidTmp = line[line.rfind("sageDbId=") + 10 :]
+                dbidTmp = dbidTmp[:dbidTmp.find("\"")]
+                print "dt--> " + dbidTmp
+
+
+
+
+# Can repeat multiple items within a menuSection
+# specifically, multiple twoLineEnhancedMenuItems within the items section
+#
+#        <twoLineEnhancedMenuItem id="{{VAL(key)}}"
+#            onPlay="atv.sessionStorage['addrpms']='{{ADDR_PMS()}}';{{sendToATV(ratingKey:0:duration:0)}};atv.loadURL('{{URL(key)}}&amp;PlexConnect=Play')"
+#            onSelect="atv.sessionStorage['addrpms']='{{ADDR_PMS()}}';{{sendToATV(ratingKey:0:duration:0)}};atv.loadURL('{{URL(key)}}&amp;PlexConnect=MoviePrePlay')"
+#            onHoldSelect="scrobbleMenu('{{TEXT(Movie)}}', '{{VAL(ratingKey)}}', '{{ADDR_PMS()}}');">
+#                {{COPY(Video:type::movie=COPY|episode=)}}
+#                {{VAR(cut:NoKey:)}}  <!--this sets the var to None-->
+#                <label>{{VAL(title)}}</label>
+#                <image>{{IMAGEURL(thumb)}}</image>
+#                <defaultImage>resource://Poster.png</defaultImage>
+#            </twoLineEnhancedMenuItem>
+            ATVBody_sR_m_s_mS_i_tLEMI = etree.SubElement(ATVBody_sR_m_s_mS_i, 'twoLineEnhancedMenuItem')
+            ATVBody_sR_m_s_mS_i_tLEMI.set('id','tLEMI_'+str(id) )
+            id = id + 1
+
+            txtTmp = "atv.sessionStorage['addrpms']='" + stv_cnct_ip + "';atv.loadURL('http://" + stv_cnct_ip
+            ATVBody_sR_m_s_mS_i_tLEMI.set('onPlay', txtTmp + "/MediaFileId=" + dbidTmp  + "')")
+            ATVBody_sR_m_s_mS_i_tLEMI.set('onSelect', txtTmp + "/MediaId=" + dbidTmp + "')" )
+            ATVBody_sR_m_s_mS_i_tLEMI.set('onHoldSelect', txtTmp + "/MediaId=" + dbidTmp  + "')" )
+
+            ATVBody_sR_m_s_mS_i_tLEMI_l = etree.SubElement(ATVBody_sR_m_s_mS_i_tLEMI, 'label')
+            ATVBody_sR_m_s_mS_i_tLEMI_l.text = lineTmp
+            ATVBody_sR_m_s_mS_i_tLEMI_i = etree.SubElement(ATVBody_sR_m_s_mS_i_tLEMI, 'image')
+            ATVBody_sR_m_s_mS_i_tLEMI_i.text = "http://" + sagetv_ip + "/sagex/media/poster/" + dbidTmp
+            
+            ATVBody_sR_m_s_mS_i_tLEMI_dI = etree.SubElement(ATVBody_sR_m_s_mS_i_tLEMI, 'defaultImage')
+            ATVBody_sR_m_s_mS_i_tLEMI_dI.text = "resource://Poster.png"
+
+
+#    ATVBody_sR_m_s_mS_i_tLEMI = etree.SubElement(ATVBody_sR_m_s_mS_i, 'twoLineEnhancedMenuItem')
+#    ATVBody_sR_m_s_mS_i_tLEMI.set('id','tLEMI_1')
+#
+#    txtTmp = "atv.loadURL('http://" + stv_cnct_ip + "')"
+#    MediaIdValue = "11128704"
+#
+#    ATVBody_sR_m_s_mS_i_tLEMI.set('onPlay', txtTmp + "/MediaId=" + MediaIdValue )
+#    ATVBody_sR_m_s_mS_i_tLEMI.set('onSelect', txtTmp + "/MediaFileId=" + MediaIdValue )
+#    ATVBody_sR_m_s_mS_i_tLEMI.set('onHoldSelect', txtTmp + "/MediaFileId=" + MediaIdValue )
+#
+#    ATVBody_sR_m_s_mS_i_tLEMI_l = etree.SubElement(ATVBody_sR_m_s_mS_i_tLEMI, 'label')
+#    ATVBody_sR_m_s_mS_i_tLEMI_l.text = "Label2"
+#    ATVBody_sR_m_s_mS_i_tLEMI_i = etree.SubElement(ATVBody_sR_m_s_mS_i_tLEMI, 'image')
+#    ATVBody_sR_m_s_mS_i_tLEMI_i.text = "http://" + stv_cnct_ip + "/stream/MediaFileThumbnailServlet?MediaFileId=" + MediaIdValue
+#    ATVBody_sR_m_s_mS_i_tLEMI_dI = etree.SubElement(ATVBody_sR_m_s_mS_i_tLEMI, 'defaultImage')
+#    ATVBody_sR_m_s_mS_i_tLEMI_dI.text = "resource://Poster.png"
+
+    return ATVRoot
+
+def setTimeline(path):
+    # find sageDbId
+    # find time
+    # save "time" into a file called sageDbId
+
+    # 00:14:12 WebServer: serving .xml: /:/timeline :
+    #?ratingKey=undefined
+    #&duration=undefined
+    #&key=%2Flibrary%2Fmetadata%2Fundefined
+    #&state=play
+    #&time=0
+    #&report=1
+    #&sageDbId=11031928
+    #&X-Plex-Client-Identifier=C07FDV4EDDR5
+    #&X-Plex-Device-Name=Family%20Room%20Apple%20TV
+
+    sageDbId = path[path.find("sageDbId="):]
+    sageDbId = sageDbId[sageDbId.find('=') + 1 :sageDbId.find('&')]
+
+    time = path[path.find("time="):]
+    time = time[time.find('=') + 1 :time.find('&')]
+
+    # if the dir does not exist, make it
+    if not os.path.exists("bookmarks"):
+        os.makedirs("bookmarks")
+        
+    file = codecs.open("bookmarks/" + sageDbId + ".bk", "w", "utf-8")
+    file.write(time)
+    file.close()
+
+    return
+
+
+def makeExample(path):
+    dprint(__name__, 1, "====== makeExample ======: {0}", path)
+
+    if path[path.rfind('=')+1:] is "":
+        filename = "mainmenu.xml"
+
+    else:
+        filename = path[path.rfind('=')+1:]
+
+    print "name--> " + filename
+    filename = "examples/" + filename
+
+    print "name--> " + filename
+    file = codecs.open(filename, "r", "utf-8")
+    textXML = file.read()
+    file.close()
+
+
+    tree = etree.fromstring(textXML)
+
+    return tree
+
+    # Display a list of example screens
+    # load static example file
+    # return xml as appropriate
+
+    # default, top menu
+    # viewWithNavigatorBar
+    # scroller - grid / collection divider
+    # scrollerPreview
+    # itemDetail
+    # listWithPreview - twoLineEnhancedItem
+    # listWithPreview - oneLineMenuItem  preview / cross fade preview
+    # listWithPreview - twoLineMenuItem  preview / cross fade preview
+    #                    horizontalDivider
+    #                    rightLabel
+    #       When an item is selected, the url needs to be
+    #           a scrollerPreview? (or other type?)
+    #unplayedDot
+    # plist -- audio play list?
+    # mediabrowser - header with count and buttons
+    # videoplayer (cant actually show)
+    # dialog
+    # preview - paradepreview
+    # Search
+    # searchResults
+    # listScrollerSplit
+
+def getTrailers(path, bin):
+    dprint(__name__, 1, "====== getTrailers ======: {0}", path )
+    #
+    # Call out to Apple, get the appropriate page, return it
+    #
+    # get address, path with auth and xml=yes
+    #r = requests.get(address + path, auth=(username, password))
+#    r = requests.get( textURL , auth=(username, password))
+
+    # https://trailers.apple.com/trailers/independent/freebirds/images/poster-xlarge.jpg
+
+    r = requests.get( "http://trailers.apple.com" + path )
+    
+    if int(r.status_code) == 200:
+        dprint(__name__, 2, "code 200")
+        dprint(__name__, 2, "encoding: {0}", r.encoding )
+        #        r.encoding = 'ucs-2'
+        #        dprint(__name__, 2, "encoding: {0}", r.encoding )
+        
+        #        root = etree.fromstring(r.text.encode('utf-8'))
+        
+        if bin == "True":
+            return r.raw
+        else:
+            return r.text.encode('utf-8')
+
+    elif ( int(r.status_code) == 301 ) or ( int(r.status_code) == 302 ):
+        dprint(__name__, 2, "headers: {0}", r.headers.get('Location') )
+        return r.text.encode('utf-8')
+    
+    elif int(r.status_code) >= 400:
+        error = "HTTP response error: " + str(r.status_code) + " " + str(r.text)
+        dprint(__name__, 2, "error: {0}", error )
+        return r.text.encode('utf-8')
+
+
+
+
+"""
+    # XML converter functions
+    # - translate aTV request and send to PMS
+    # - receive reply from PMS
+    # - select XML template
+    # - translate to aTV XML
+    """
+def XML_STV2aTV(address, path, options):
+    
+    # OnScreen tree ends up as
+    #    Top menu
+    #        Recorded Shows (title List)
+    #            Titles (List all episodes in that title)
+    #                Episode / Airing ID INFO
+    #                    Make "play" xml using Media ID
+    #        Media directories
+    #            Sub dirs
+    #                Media files
+    #                    make play XML using SageDBID
+    
+    #
+    # I cheated, to "remove" spaces in URLs, I made them *
+    # so replace all '*' with ' '
+    # There is probably a "correct" way to do this.. I'll have to look into this.
+    #
+    dprint(__name__, 1, "--path-----> {0}", path)
+    path = path.replace('+',' ')
+    path = path.replace('&apos;','\'')
+    # for now, we are ignoring the address passed
+    #    print "--address--> " + address
+    dprint(__name__, 1, "--path-----> {0}", path)
+    
+    # Make top menu
+    if path.find("SageConnect") > 0:
+        aTVroot = makeTopMenu()
+        return etree.tostring(aTVroot)
+    
+    #========== Display example layouts ===========
+    # Make and return a list of all recorded shows
+    elif path.find("exampleLayouts=") > 0:
+        aTVroot = makeExample(path)
+        return etree.tostring(aTVroot)
+    
+    #========== Handle / Manage recorded shows ===========
+    # Make and return a list of all recorded shows
+    elif path.find("recordedShows") > 0:
+        aTVroot = makeRecordedShowList()
+        return etree.tostring(aTVroot)
+    
+    # Make and return a list of all recorded shows
+    elif path.find("recordedGrid") > 0:
+        aTVroot = makeTitleGrid(path)
+        return etree.tostring(aTVroot)
+    
+    # if given a show title, make a list of all episodes
+    elif path.find("title") > 0:
+        aTVroot = makeShowList(path)
+        return etree.tostring(aTVroot)
+    
+    # if given a media id, get media info and display on screen
+    elif path.find("MediaId") > 0:
+        aTVroot = makeMediaInfo(path)
+        return etree.tostring(aTVroot)
+    
+    # when play is clicked, return the XML with media info
+    elif path.find("MediaFileId") > 0:
+        aTVroot = makePlay(path)
+        return etree.tostring(aTVroot)
+    
+    #========== Handle / Manage media library ===========
+    
+    # if MediaLibrary.... make show list
+    # parse and return the media path
+    # if this is a media file, return the XML similar to MediaID above
+    # when play is clicked, MediaFileID (above) is called
+    # parse the path to get what to generate
+    elif path.find("mediaPath") > 0:
+        aTVroot = makeDirList(path[path.find('=')+1:])
+        return etree.tostring(aTVroot)
+    
+    #========== Search ===========
+    
+    # when search main is requested
+    elif path.find("mediaSearch") > 0:
+        aTVroot = searchTitle()
+        return etree.tostring(aTVroot)
+    
+    # when a search query comes through
+    elif path.find("search?") > 0:
+        aTVroot = searchMedia(path)
+        return etree.tostring(aTVroot)
+    
+    #========== Playtime Feedback (for resume) ===========
+    
+    # when search main is requested
+    elif path.find("timeline") > 0:
+        setTimeline(path)
+        return
+
+    #========== Make Apple Trailers Work ===========
+    # https://trailers.apple.com/trailers/independent/freebirds/images/poster-xlarge.jpg
+    # Make and return a list of all recorded shows
+    elif path.startswith("/appletv/"):
+        return getTrailers(path, "false")
+
+    elif path.startswith("/trailers/"):
+        return getTrailers(path, "false")
+
+    # Generate an error
+    return XML_Error('SageTV Connect', 'Unable to handle request, please try again.')
 
 
 def InitCfg():
