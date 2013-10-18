@@ -13,15 +13,11 @@ function loadPage(url)
 };
 
 /*
- * ATVLogger
+ * ATVlogger
  */
-function log(msg, level)
+function log(msg)
 {
-    level = level || 1;
-    var req = new XMLHttpRequest();
-    var url = "http://atv.plexconnect/" + "&PlexConnectATVLogLevel=" + level.toString() + "&PlexConnectLog=" + encodeURIComponent(msg);
-    req.open('GET', url, true);
-    req.send();
+  loadPage("http://atv.plexconnect/" + "&PlexConnectLog=" + encodeURIComponent(msg) );
 };
 
  /*
@@ -38,8 +34,9 @@ atv.player.playerTimeDidChange = function(time)
                         '&duration=' + atv.sessionStorage['duration'] + 
                         '&key=%2Flibrary%2Fmetadata%2F' + atv.sessionStorage['ratingKey'] + 
                         '&state=playing' +
-                        '&time=' + thisReportTime.toString() + 
-                        '&X-Plex-Client-Identifier=' + atv.device.udid + 
+                        '&time=' + thisReportTime.toString() +
+                        '&sageDbId=' + atv.sessionStorage['sageDbId'] +
+                        '&X-Plex-Client-Identifier=' + atv.device.udid +
                         '&X-Plex-Device-Name=' + encodeURIComponent(atv.device.displayName) );
   }
 };
@@ -48,7 +45,7 @@ atv.player.playerTimeDidChange = function(time)
  * Handle ATV playback stopped
  */
 atv.player.didStopPlaying = function()
-{	
+{
   // Remove views
   if (clockTimer) atv.clearInterval(clockTimer);
   if (endTimer) atv.clearInterval(endTimer);
@@ -59,12 +56,15 @@ atv.player.didStopPlaying = function()
                       '&duration=' + atv.sessionStorage['duration'] + 
                       '&key=%2Flibrary%2Fmetadata%2F' + atv.sessionStorage['ratingKey'] + 
                       '&state=stopped' +
-                      '&time=' + lastReportedTime.toString() + 
-                      '&X-Plex-Client-Identifier=' + atv.device.udid + 
+                      '&time=' + lastReportedTime.toString() +
+                      '&sageDbId=' + atv.sessionStorage['sageDbId'] +
+                      '&X-Plex-Client-Identifier=' + atv.device.udid +
                       '&X-Plex-Device-Name=' + encodeURIComponent(atv.device.displayName) );
     
   // Kill the session.
   loadPage(addrPMS + '/video/:/transcode/universal/stop?session=' + atv.device.udid);
+
+
 };
 
 /*
@@ -190,11 +190,12 @@ atv.player.playerStateChanged = function(newState, timeIntervalSec) {
   time = Math.round(timeIntervalSec*1000);
   loadPage( addrPMS + '/:/timeline?ratingKey=' + atv.sessionStorage['ratingKey'] + 
                       '&duration=' + atv.sessionStorage['duration'] + 
-                      '&key=%2Flibrary%2Fmetadata%2F' + atv.sessionStorage['ratingKey'] + 
+                      '&key=%2Flibrary%2Fmetadata%2F' + atv.sessionStorage['ratingKey'] +
                       '&state=' + state + 
                       '&time=' + time.toString() + 
                       '&report=1' +
-                      '&X-Plex-Client-Identifier=' + atv.device.udid + 
+                      '&sageDbId=' + atv.sessionStorage['sageDbId'] +
+                      '&X-Plex-Client-Identifier=' + atv.device.udid +
                       '&X-Plex-Device-Name=' + encodeURIComponent(atv.device.displayName) );
   }
 };
