@@ -25,6 +25,7 @@ import signal
 import Settings, ATVSettings
 from Debug import *  # dprint()
 import XMLConverter  # XML_PMS2aTV, XML_PlayVideo
+import SageXML
 import Localize
 
 
@@ -99,7 +100,16 @@ class MyHandler(BaseHTTPRequestHandler):
                     self.send_header('Content-type', 'text/plain')
                     self.end_headers()
                     return
+
+
+                # serve "application.js" to aTV
+                # disregard the path - it is different for different iOS versions
+                if self.path.startswith("/appletv/") or self.path.startswith("/trailers/"):
+                    if self.path.endswith(".jpg") or self.path.endswith(".png"):
+                        return SageXML.getTrailers(self.path, "True")
                 
+
+
                 # serve "application.js" to aTV
                 # disregard the path - it is different for different iOS versions
                 if self.path.endswith("application.js"):
@@ -148,7 +158,9 @@ class MyHandler(BaseHTTPRequestHandler):
                 # get everything else from XMLConverter - formerly limited to trailing "/" and &PlexConnect Cmds
                 if True:
                     dprint(__name__, 1, "serving .xml: " + self.path + " : " + args )
-                    XML = XMLConverter.XML_PMS2aTV(self.client_address, self.path + args, options)
+#                    XML = XMLConverter.XML_PMS2aTV(self.client_address, self.path + args, options)
+                    XML = SageXML.XML_STV2aTV(self.client_address, self.path + args, options)
+
                     self.send_response(200)
                     self.send_header('Content-type', 'text/xml')
                     self.end_headers()
