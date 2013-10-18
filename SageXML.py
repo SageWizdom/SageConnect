@@ -408,6 +408,10 @@ def makeTopMenu():
     ATV_LSS_MS_I_ItemKP_xy.text = "Stuff"
 
 
+#    # No Longer Used Recorded Show List
+#    href = "atv.loadURL('http://" + stv_cnct_ip + "/recordedShows.xml')"
+#    label = "Recorded Shows List"
+
 
     #
     # Add "Recorded Shows" entry.... Have this display a grid!
@@ -426,29 +430,6 @@ def makeTopMenu():
     ATV_LSS_MS_I_ItemPrev = etree.SubElement(ATV_LSS_MS_I_Item, 'preview')
     ATV_LSS_MS_I_ItemKP_x = etree.SubElement(ATV_LSS_MS_I_ItemPrev, 'link')
     ATV_LSS_MS_I_ItemKP_x.text = href + "=Preview"
-
-
-
-
-#    href = "atv.loadURL('http://" + stv_cnct_ip + "/recordedShows.xml')"
-#    label = "Recorded Shows List"
-#    ATV_LSS_MS_MenuItem = etree.SubElement(ATV_LSS_MS_Items, 'oneLineMenuItem')
-#    ATV_LSS_MS_MenuItem.set("id", "list_1" )
-#    ATV_LSS_MS_MenuItem.set("onSelect", href )
-#    ATV_LSS_MS_MenuItemLabel = etree.SubElement(ATV_LSS_MS_MenuItem, 'label')
-#    ATV_LSS_MS_MenuItemLabel.text = label
-#    ATV_LSS_MS_MenuItemAcc = etree.SubElement(ATV_LSS_MS_MenuItem, 'accessories')
-#    etree.SubElement(ATV_LSS_MS_MenuItemAcc, 'arrow')
-
-#    href = "atv.loadURL('http://" + stv_cnct_ip + "/recordedGrid.xml')"
-#    label = "Recorded Shows Grid"
-#    ATV_LSS_MS_MenuItem = etree.SubElement(ATV_LSS_MS_Items, 'oneLineMenuItem')
-#    ATV_LSS_MS_MenuItem.set("id", "list_2" )
-#    ATV_LSS_MS_MenuItem.set("onSelect", href )
-#    ATV_LSS_MS_MenuItemLabel = etree.SubElement(ATV_LSS_MS_MenuItem, 'label')
-#    ATV_LSS_MS_MenuItemLabel.text = label
-#    ATV_LSS_MS_MenuItemAcc = etree.SubElement(ATV_LSS_MS_MenuItem, 'accessories')
-#    etree.SubElement(ATV_LSS_MS_MenuItemAcc, 'arrow')
 
 
     #
@@ -474,17 +455,6 @@ def makeTopMenu():
     ATV_LSS_MS_I_ItemKP_x = etree.SubElement(ATV_LSS_MS_I_ItemKP, 'image')
 #    ATV_LSS_MS_I_ItemKP_x = etree.SubElement(ATV_LSS_MS_I_ItemKP, 'link')
 ##    ATV_LSS_MS_I_ItemKP_x.text = href
-
-#    href = "atv.loadURL('http://" + stv_cnct_ip + "/mediaPath.xml=')"
-#    label = "Media Library"
-#    ATV_LSS_MS_MenuItem = etree.SubElement(ATV_LSS_MS_Items, 'oneLineMenuItem')
-#    ATV_LSS_MS_MenuItem.set("id", "list_3" )
-#    ATV_LSS_MS_MenuItem.set("onSelect", href )
-#    ATV_LSS_MS_MenuItemLabel = etree.SubElement(ATV_LSS_MS_MenuItem, 'label')
-#    ATV_LSS_MS_MenuItemLabel.text = label
-#    ATV_LSS_MS_MenuItemAcc = etree.SubElement(ATV_LSS_MS_MenuItem, 'accessories')
-#    etree.SubElement(ATV_LSS_MS_MenuItemAcc, 'arrow')
-
 
     #
     # Add "Media Search" entry.... Have this display a search??!
@@ -533,22 +503,12 @@ def makeTopMenu():
 #    ATV_LSS_MS_I_ItemKP_x.text = href
 
 
-#    href = "atv.loadURL('http://" + stv_cnct_ip + "/mediaSearch?')"
-#    label = "Title Search"
-#    ATV_LSS_MS_MenuItem = etree.SubElement(ATV_LSS_MS_Items, 'oneLineMenuItem')
-#    ATV_LSS_MS_MenuItem.set("id", "list_4" )
-#    ATV_LSS_MS_MenuItem.set("onSelect", href )
-#    ATV_LSS_MS_MenuItemLabel = etree.SubElement(ATV_LSS_MS_MenuItem, 'label')
-#    ATV_LSS_MS_MenuItemLabel.text = label
-#    ATV_LSS_MS_MenuItemAcc = etree.SubElement(ATV_LSS_MS_MenuItem, 'accessories')
-#    etree.SubElement(ATV_LSS_MS_MenuItemAcc, 'arrow')
-
-
     ATV_LSS_MenuSections = etree.SubElement(ATV_LSS_Sections, 'menuSection')
     ATV_LSS_MS_Items = etree.SubElement(ATV_LSS_MenuSections, 'header')
     ATV_LSS_MS_Itemx = etree.SubElement(ATV_LSS_MS_Items, 'horizontalDivider')
     ATV_LSS_MS_Itemx.set('alignment','left')
     ATV_LSS_MS_Itemx = etree.SubElement(ATV_LSS_MS_Itemx, 'title')
+
 #        <horizontalDivider alignment="left">
 #            <title>{{TEXT(Video)}}</title>
 #        </horizontalDivider>
@@ -562,16 +522,37 @@ def makeTopMenu():
 
     ATV_LSS_MS_Items = etree.SubElement(ATV_LSS_MenuSections, 'items')
 
+#
+#    href = "atv.loadURL('http://trailers.apple.com/appletv/index.xml')"
+#    label = "Trailers"
+#    ATV_LSS_MS_MenuItem = etree.SubElement(ATV_LSS_MS_Items, 'oneLineMenuItem')
+#    ATV_LSS_MS_MenuItem.set("id", "list_7" )
+#    ATV_LSS_MS_MenuItem.set("onSelect", href )
+#    ATV_LSS_MS_MenuItemLabel = etree.SubElement(ATV_LSS_MS_MenuItem, 'label')
+#    ATV_LSS_MS_MenuItemLabel.text = label
+#    ATV_LSS_MS_MenuItemAcc = etree.SubElement(ATV_LSS_MS_MenuItem, 'accessories')
+#    etree.SubElement(ATV_LSS_MS_MenuItemAcc, 'arrow')
 
-    href = "atv.loadURL('http://trailers.apple.com/appletv/index.xml')"
+
+    hdrhref = "atv.loadURL('http://trailers.apple.com/appletv/index.xml')"
     label = "Trailers"
-    ATV_LSS_MS_MenuItem = etree.SubElement(ATV_LSS_MS_Items, 'oneLineMenuItem')
-    ATV_LSS_MS_MenuItem.set("id", "list_7" )
-    ATV_LSS_MS_MenuItem.set("onSelect", href )
-    ATV_LSS_MS_MenuItemLabel = etree.SubElement(ATV_LSS_MS_MenuItem, 'label')
-    ATV_LSS_MS_MenuItemLabel.text = label
-    ATV_LSS_MS_MenuItemAcc = etree.SubElement(ATV_LSS_MS_MenuItem, 'accessories')
-    etree.SubElement(ATV_LSS_MS_MenuItemAcc, 'arrow')
+    ATV_LSS_MS_I_Item = etree.SubElement(ATV_LSS_MS_Items, 'twoLineEnhancedMenuItem')
+    ATV_LSS_MS_I_Item.set("id", label )
+    ATV_LSS_MS_I_Item.set("onPlay", hdrhref )
+    ATV_LSS_MS_I_Item.set("onSelect", hdrhref )
+    ATV_LSS_MS_I_ItemLabel = etree.SubElement(ATV_LSS_MS_I_Item, 'label')
+    ATV_LSS_MS_I_ItemLabel.text = label
+    ATV_LSS_MS_I_ItemImg = etree.SubElement(ATV_LSS_MS_I_Item, 'image')
+    ATV_LSS_MS_I_ItemImg.text = "http://" + stv_cnct_ip + "/thumbnails/Trailers.png"
+    ATV_LSS_MS_I_ItemPrev = etree.SubElement(ATV_LSS_MS_I_Item, 'preview')
+    ATV_LSS_MS_I_ItemKP = etree.SubElement(ATV_LSS_MS_I_ItemPrev, 'keyedPreview')
+    ATV_LSS_MS_I_ItemKP_x = etree.SubElement(ATV_LSS_MS_I_ItemKP, 'title')
+    ATV_LSS_MS_I_ItemKP_x.text = "(initial) Apple Trailers Support"
+    ATV_LSS_MS_I_ItemKP_x = etree.SubElement(ATV_LSS_MS_I_ItemKP, 'summary')
+    ATV_LSS_MS_I_ItemKP_x.text = "Look through AppleTV Trailers to find whats new"
+    ATV_LSS_MS_I_ItemKP_x = etree.SubElement(ATV_LSS_MS_I_ItemKP, 'image')
+    ATV_LSS_MS_I_ItemKP_x.text = "http://" + stv_cnct_ip + "/thumbnails/Trailers.png"
+
 
 
 
@@ -1202,8 +1183,8 @@ def makeShowList(atvTitle):
                     #
                     # Add Generic SageTV item.... use this to show current status
                     #
-                    href = "http://" + stv_cnct_ip + "/recordedShows.xml"
-                    hdrhref = "atv.loadURL('" + href + "')"
+                    href = "http://" + stv_cnct_ip + "/MediaId.xml="
+                    hdrhref = "atv.loadURL('" + href + mediaId + "')"
                     ATV_LSS_MS_I_Item = etree.SubElement(ATV_LSS_MS_Items, 'oneLineMenuItem')
                     ATV_LSS_MS_I_Item.set("id", episodeTitle )
                     ATV_LSS_MS_I_Item.set("onPlay", hdrhref )
@@ -2567,17 +2548,17 @@ def getTrailers(path, bin):
         #        root = etree.fromstring(r.text.encode('utf-8'))
         
         if bin == "True":
-            return r.raw
+            return r.content
         else:
             return r.text.encode('utf-8')
 
     elif ( int(r.status_code) == 301 ) or ( int(r.status_code) == 302 ):
-        dprint(__name__, 2, "headers: {0}", r.headers.get('Location') )
+        dprint(__name__, 0, "headers: {0}", r.headers.get('Location') )
         return r.text.encode('utf-8')
     
     elif int(r.status_code) >= 400:
         error = "HTTP response error: " + str(r.status_code) + " " + str(r.text)
-        dprint(__name__, 2, "error: {0}", error )
+        dprint(__name__, 0, "error: {0}", error )
         return r.text.encode('utf-8')
 
 

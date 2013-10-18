@@ -106,9 +106,14 @@ class MyHandler(BaseHTTPRequestHandler):
                 # disregard the path - it is different for different iOS versions
                 if self.path.startswith("/appletv/") or self.path.startswith("/trailers/"):
                     if self.path.endswith(".jpg") or self.path.endswith(".png"):
-                        return SageXML.getTrailers(self.path, "True")
-                
-
+                        self.send_response(200)
+                        if self.path.endswith(".jpg"):
+                            self.send_header('Content-type', 'image/jpeg')
+                        else:
+                            self.send_header('Content-type', 'image/png')
+                        self.end_headers()
+                        self.wfile.write(SageXML.getTrailers(self.path, "True"))
+                        return
 
                 # serve "application.js" to aTV
                 # disregard the path - it is different for different iOS versions
