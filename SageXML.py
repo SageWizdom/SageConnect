@@ -575,15 +575,15 @@ def makeTopMenu():
 
 
 
-    href = "atv.loadURL('http://" + stv_cnct_ip + "/exampleLayouts=')"
-    label = "Layout Examples"
-    ATV_LSS_MS_MenuItem = etree.SubElement(ATV_LSS_MS_Items, 'oneLineMenuItem')
-    ATV_LSS_MS_MenuItem.set("id", "list_5" )
-    ATV_LSS_MS_MenuItem.set("onSelect", href )
-    ATV_LSS_MS_MenuItemLabel = etree.SubElement(ATV_LSS_MS_MenuItem, 'label')
-    ATV_LSS_MS_MenuItemLabel.text = label
-    ATV_LSS_MS_MenuItemAcc = etree.SubElement(ATV_LSS_MS_MenuItem, 'accessories')
-    etree.SubElement(ATV_LSS_MS_MenuItemAcc, 'arrow')
+#    href = "atv.loadURL('http://" + stv_cnct_ip + "/exampleLayouts=')"
+#    label = "Layout Examples"
+#    ATV_LSS_MS_MenuItem = etree.SubElement(ATV_LSS_MS_Items, 'oneLineMenuItem')
+#    ATV_LSS_MS_MenuItem.set("id", "list_5" )
+#    ATV_LSS_MS_MenuItem.set("onSelect", href )
+#    ATV_LSS_MS_MenuItemLabel = etree.SubElement(ATV_LSS_MS_MenuItem, 'label')
+#    ATV_LSS_MS_MenuItemLabel.text = label
+#    ATV_LSS_MS_MenuItemAcc = etree.SubElement(ATV_LSS_MS_MenuItem, 'accessories')
+#    etree.SubElement(ATV_LSS_MS_MenuItemAcc, 'arrow')
 
 
 #    print XML_prettystring(ATVRoot)
